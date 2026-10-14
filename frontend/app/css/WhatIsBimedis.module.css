@@ -1,0 +1,101 @@
+/* =========================================
+   SECTION WRAPPER & CONTAINER
+========================================= */
+.sectionWrapper {
+  width: 100%;
+  background-color: #ffffff;
+  padding: 80px 20px; /* Generous vertical padding */
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif; /* Standard web font match */
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: 60px; /* Space between text and image */
+  align-items: flex-start; /* Align content to top */
+}
+
+/* =========================================
+   LEFT COLUMN: TEXT STYLES
+========================================= */
+.textColumn {
+  flex: 1; /* Takes up roughly 50% of space */
+  max-width: 550px;
+}
+
+/* Headings Color (Matched to screenshot) */
+.mainHeading, .subHeading {
+  color: #4a558a; /* Slate Blue */
+  font-weight: 700;
+  margin-top: 0;
+}
+
+.mainHeading {
+      font-size: 25px;
+    margin-bottom: 0px;
+    letter-spacing: -0.5px;
+}
+
+.subHeading {
+    font-size: 25px;
+    margin-bottom: 0px;
+    letter-spacing: -0.5px;
+}
+
+/* Paragraph Styles */
+.paragraph {
+  color: #333333;
+  font-size: 0.95rem;
+  line-height: 1.6; /* Good readability */
+  margin-bottom: 9px;
+}
+
+/* Ensure bold text is clearly visible */
+.paragraph strong {
+  font-weight: 700;
+  color: #000000;
+}
+
+/* =========================================
+   RIGHT COLUMN: IMAGE STYLES
+========================================= */
+.imageColumn {
+  flex: 1; /* Takes up roughly 50% of space */
+  width: 100%;
+}
+
+.featureImage {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  border-radius: 4px; /* Optional: slight rounding */
+}
+
+/* =========================================
+   RESPONSIVE DESIGN (Mobile/Tablet)
+========================================= */
+@media (max-width: 900px) {
+  .sectionWrapper {
+    padding: 40px 20px;
+  }
+
+  .container {
+    flex-direction: column-reverse; /* Put image on top on mobile */
+    gap: 40px;
+  }
+
+  .textColumn {
+    max-width: 100%;
+  }
+
+  .mainHeading {
+    font-size: 1.8rem;
+  }
+
+  .subHeading {
+    font-size: 1.6rem;
+  }
+}
