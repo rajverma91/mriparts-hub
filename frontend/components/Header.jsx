@@ -45,25 +45,16 @@ export default function Header() {
 
   return (
     <header className="site-header">
-
-      {/* ─────────── TOP BAR (navy) ─────────── */}
       <div className="topbar">
         <div className="topbar-inner">
-          {/* <BrandLogo variant="dark" /> */}
-      <a href='/'>      <img 
-  src={Logo.src}  // <-- Add .src here
-  alt="MRI Safe Products Logo" 
-  className="logoImage" // Don't forget to add a CSS class to size it!
-/></a>
-
+      {/* <a href='/'>Logo</a> */}
+      <a href='/'><img src={Logo.src}  alt="MRI Safe Products Logo" className="logoImage"/></a>
           <div className="topbar-right">
-            {/* Language */}
             <select
               className="topbar-select"
               value={lang}
               onChange={(e) => setLang(e.target.value)}
-              aria-label="Language"
-            >
+              aria-label="Language">
               <option value="EN">🇺🇸 English</option>
               <option value="DE">🇩🇪 Deutsch</option>
               <option value="FR">🇫🇷 Français</option>
