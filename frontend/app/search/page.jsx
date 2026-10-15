@@ -1,4 +1,3 @@
-export default function Page() { return <div className='container' style={{padding:60}}><h1>Coming soon</h1></div>; }
 import Link from 'next/link';
 import FilterSidebar from '@/components/FilterSidebar';
 import ListingCard from '@/components/ListingCard';

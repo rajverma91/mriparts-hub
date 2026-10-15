@@ -1,4 +1,3 @@
-export default function Page() { return <div className='container' style={{padding:60}}><h1>Coming soon</h1></div>; }
 import Link from 'next/link';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
