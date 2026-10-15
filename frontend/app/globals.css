@@ -20,7 +20,287 @@ input, select, textarea {
   grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 1fr;
   gap: 30px;
 }
+/* ═══════════ FOOTER (Bimedis-style) ═══════════ */
 
+/* Light utility row with uppercase links */
+.footer-topbar {
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+.footer-topbar-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 16px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 28px;
+}
+.footer-topbar-link {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+}
+.footer-topbar-link:hover {
+  color: #0d6efd;
+}
+
+/* Dark section */
+.footer-dark {
+  background: #1e293b;
+  color: #cbd5e1;
+}
+.footer-dark-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Social icons row */
+.footer-social {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.footer-social-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .08);
+  color: #e2e8f0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, color .15s, transform .15s;
+}
+.footer-social-icon:hover {
+  background: #0d6efd;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Contact row */
+.footer-contacts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 26px;
+  font-size: 14px;
+}
+.footer-contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #e2e8f0;
+}
+.footer-contact:hover { color: #fff; }
+
+/* Bottom bar */
+.footer-bottom {
+  background: #0f172a;
+  color: #94a3b8;
+  font-size: 13px;
+  text-align: center;
+  padding: 12px 20px;
+}
+/* ═══════════════════════════════════════════════════════
+   SITE HEADER (Bimedis-style two-tier)
+   ═══════════════════════════════════════════════════════ */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* ─────── TOP TIER (navy) ─────── */
+.hdr-top {
+  background: #1e2a4a;   /* deep navy, close to reference */
+  color: #ffffff;
+}
+.hdr-top-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 64px;
+}
+
+.hdr-logo { display: flex; align-items: center; flex-shrink: 0; }
+
+/* Right-side cluster */
+.hdr-controls {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+/* Language / Currency pill */
+.hdr-select {
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  font-size: 14px;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background .15s;
+}
+.hdr-select:hover { background: rgba(255, 255, 255, .08); }
+.hdr-flag { font-size: 16px; line-height: 1; }
+.hdr-caret { opacity: .8; }
+
+/* Heart icon */
+.hdr-heart {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #facc15;
+  transition: transform .15s;
+}
+.hdr-heart:hover { transform: scale(1.15); }
+
+.hdr-badge {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  background: #dc3545;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 17px;
+  height: 17px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+/* Sign in / Register / Account actions */
+.hdr-action {
+  color: #e2e8f0;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color .15s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+.hdr-action:hover { color: #ffffff; }
+.hdr-logout {
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, .25);
+}
+.hdr-logout:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, .08);
+}
+
+/* Yellow "PLACE AN ADVERT" pill */
+.hdr-cta {
+  background: linear-gradient(180deg, #facc15 0%, #eab308 100%);
+  color: #1e293b;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 10px 20px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 10px rgba(234, 179, 8, .35);
+  transition: transform .15s, box-shadow .15s;
+  white-space: nowrap;
+}
+.hdr-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(234, 179, 8, .45);
+}
+
+/* ─────── SECOND TIER (white) ─────── */
+.hdr-nav {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+.hdr-nav-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  height: 48px;
+}
+.hdr-nav-inner::-webkit-scrollbar { display: none; }
+
+.hdr-nav-link {
+  position: relative;
+  flex-shrink: 0;
+  padding: 0 20px;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  white-space: nowrap;
+  transition: color .15s;
+}
+.hdr-nav-link + .hdr-nav-link::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 20px;
+  width: 1px;
+  background: #e5e7eb;
+}
+.hdr-nav-link:hover { color: #0d6efd; }
+.hdr-nav-link.active { color: #0d6efd; font-weight: 600; }
+
+/* ─────── Responsive ─────── */
+@media (max-width: 1080px) {
+  .hdr-controls { gap: 12px; }
+  .hdr-select { font-size: 13px; }
+  .hdr-action { font-size: 13px; }
+  .hdr-cta { padding: 8px 14px; font-size: 12px; }
+}
+@media (max-width: 720px) {
+  .hdr-select span:not(.hdr-flag) { display: none; }
+  .hdr-action span:not(.hdr-icon) { display: none; }
+  .hdr-nav-link { padding: 0 14px; }
+}
+/* Optional: mobile tweaks */
+@media (max-width: 640px) {
+  .footer-topbar-inner { gap: 8px 18px; }
+  .footer-topbar-link { font-size: 12px; }
+  .footer-contacts { gap: 16px; font-size: 13px; }
+}
 @media (max-width: 1000px) {
   .footer .container { grid-template-columns: repeat(3, 1fr); }
 }
