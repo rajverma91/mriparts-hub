@@ -4,12 +4,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import MultiImageUpload from '@/components/MultiImageUpload';
+import toast from 'react-hot-toast';
 
 export default function NewListing() {
-  const [cats, setCats]     = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [error, setError]   = useState('');
+  const [cats, setCats]       = useState([]);
+  const [brands, setBrands]   = useState([]);
+  const [error, setError]     = useState('');
   const [needsVerify, setNeedsVerify] = useState(false);
+  
   const [form, setForm] = useState({
     title: '', description: '', price: 0, currency: 'USD', condition_type: 'used',
     category_id: '', brand_id: '', model: '', year: '', country: '', city: '',
@@ -31,36 +33,45 @@ export default function NewListing() {
   const update = (k, v) => setForm({ ...form, [k]: v });
 
   async function submit(e) {
-  e.preventDefault();
-  setError('');
-  setNeedsVerify(false);
+    e.preventDefault();
+    setError('');
+    setNeedsVerify(false);
 
-  try {
-    await api.post('/listings', {
-      ...form,
-      image_url: form.gallery_json[0] || null,
-      category_id: form.category_id || null,
-      brand_id: form.brand_id || null,
-      year: form.year || null
-    });
-    alert('Listing submitted for review.');
-    router.push('/dashboard');
-  } catch (err) {
-    // ── CATCH LIMIT ERROR ──
-    if (err.message === 'LIMIT_REACHED') {
-      if (confirm('You have reached the 1 free listing limit. Upgrade to a Pro account to post unlimited listings?')) {
-        router.push('/pro-account');
+    const toastId = toast.loading('Submitting your listing...');
+
+    try {
+      await api.post('/listings', {
+        ...form,
+        image_url: form.gallery_json[0] || null,
+        category_id: form.category_id || null,
+        brand_id: form.brand_id || null,
+        year: form.year || null
+      });
+      
+      toast.success('Listing submitted for review!', { id: toastId });
+      router.push('/dashboard');
+      
+    } catch (err) {
+      // ── CATCH LIMIT ERROR ──
+      if (err.message === 'LIMIT_REACHED') {
+        toast.error('You have reached the 1 free listing limit.', { id: toastId });
+        
+        // Wait 1.5 seconds then redirect to pro-account
+        setTimeout(() => {
+          router.push('/pro-account');
+        }, 1500);
+        return;
       }
-      return;
-    }
-    // ── END LIMIT CATCH ──
+      // ── END LIMIT CATCH ──
 
-    setError(err.message);
-    if (err.message.toLowerCase().includes('verify')) {
-      setNeedsVerify(true);
+      toast.error(err.message, { id: toastId });
+      setError(err.message);
+      
+      if (err.message.toLowerCase().includes('verify')) {
+        setNeedsVerify(true);
+      }
     }
   }
-}
 
   return (
     <form onSubmit={submit} className="container" style={{ padding: '30px 20px', maxWidth: 800 }}>
@@ -92,29 +103,32 @@ export default function NewListing() {
           </div>
         </div>
       )}
-<div className="form-row">
-  <label>Advert type</label>
-  <div style={{ display: 'flex', gap: 20, alignItems: 'center', padding: '6px 0' }}>
-    {[
-      ['sell',    'Sell'],
-      ['buy',     'Buy'],
-      ['auction', 'Auction']
-    ].map(([val, label]) => (
-      <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 500 }}>
-        <input
-          type="radio"
-          name="advert_type"
-          value={val}
-          checked={form.advert_type === val}
-          onChange={() => update('advert_type', val)}
-          style={{ accentColor: '#0d6efd', width: 18, height: 18, margin: 0 }}
-        />
-        {label}
-      </label>
-    ))}
-  </div>
-</div>
+
       <div className="card" style={{ padding: 24, marginTop: 16 }}>
+        {/* Advert Type Selector */}
+        <div className="form-row" style={{ marginBottom: 20 }}>
+          <label>Advert type</label>
+          <div style={{ display: 'flex', gap: 20, alignItems: 'center', padding: '6px 0' }}>
+            {[
+              ['sell',    'Sell'],
+              ['buy',     'Buy'],
+              ['auction', 'Auction']
+            ].map(([val, label]) => (
+              <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 500 }}>
+                <input
+                  type="radio"
+                  name="advert_type"
+                  value={val}
+                  checked={form.advert_type === val}
+                  onChange={() => update('advert_type', val)}
+                  style={{ accentColor: '#0d6efd', width: 18, height: 18, margin: 0 }}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </div>
+
         <div className="form-row">
           <label>Title *</label>
           <input required value={form.title} onChange={(e) => update('title', e.target.value)} />

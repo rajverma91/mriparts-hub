@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 const PLANS = [
   {
@@ -57,12 +58,15 @@ export default function ProAccountPage() {
   async function handleUpgrade() {
     setLoading(true);
     try {
-      // Calls the mock-upgrade endpoint we created earlier
-      await api.post('/payments/mock-upgrade', {});
-      alert('Success! You are now a Pro seller. You can post unlimited listings.');
-      router.push('/dashboard');
+      const r = await api.post('/payments/subscribe-pro', {});
+      if (r.url) {
+        toast.success('Redirecting to Stripe...');
+        window.location.href = r.url;
+      } else {
+        throw new Error('Could not create checkout session');
+      }
     } catch (e) {
-      alert(e.message);
+      toast.error(e.message);
     } finally {
       setLoading(false);
     }

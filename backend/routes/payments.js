@@ -8,8 +8,12 @@ const router = express.Router();
 // Price in cents and duration in days
 const FEATURED_PRICE_CENTS = 4900;   // $49.00
 const FEATURED_DAYS        = 30;
+const PRO_PRICE_CENTS      = 19900;  // $199.00
+const PRO_DAYS             = 30;
 
+// ─────────────────────────────────────────────────────────────
 // AUTH: start a Stripe Checkout session for featuring a listing
+// ─────────────────────────────────────────────────────────────
 router.post('/feature/:listingId', authRequired, async (req, res) => {
   try {
     const listingId = Number(req.params.listingId);
@@ -42,28 +46,29 @@ router.post('/feature/:listingId', authRequired, async (req, res) => {
     const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
     const session = await stripe.checkout.sessions.create({
-  mode: 'payment',
-  line_items: [
-    {
-      price_data: {
-        currency: 'usd',
-        unit_amount: FEATURED_PRICE_CENTS,
-        product_data: {
-          name: `Featured listing — ${listing.title}`,
-          description: `${FEATURED_DAYS} days on the MRI Parts Hub homepage.`
+      mode: 'payment',
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            unit_amount: FEATURED_PRICE_CENTS,
+            product_data: {
+              name: `Featured listing — ${listing.title}`,
+              description: `${FEATURED_DAYS} days on the MRI Parts Hub homepage.`
+            }
+          },
+          quantity: 1
         }
+      ],
+      metadata: {
+        payment_id: String(payment.insertId),
+        listing_id: String(listingId),
+        user_id:    String(req.user.id),
+        type:       'featured_listing'
       },
-      quantity: 1
-    }
-  ],
-  metadata: {
-    payment_id: String(payment.insertId),
-    listing_id: String(listingId),
-    user_id:    String(req.user.id)
-  },
-  success_url: `${FRONTEND_URL}/dashboard/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-  cancel_url:  `${FRONTEND_URL}/dashboard/billing/cancel`
-});
+      success_url: `${FRONTEND_URL}/dashboard/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${FRONTEND_URL}/dashboard/billing/cancel`
+    });
 
     await pool.query(
       'UPDATE payments SET stripe_session_id=? WHERE id=?',
@@ -77,53 +82,100 @@ router.post('/feature/:listingId', authRequired, async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────
+// AUTH: start a Stripe Checkout session for Pro Subscription
+// ─────────────────────────────────────────────────────────────
+router.post('/subscribe-pro', authRequired, async (req, res) => {
+  try {
+    const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+    
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            unit_amount: PRO_PRICE_CENTS,
+            product_data: {
+              name: 'Pro Seller Subscription (30 days)',
+              description: 'Unlimited listings + Priority Support'
+            }
+          },
+          quantity: 1
+        }
+      ],
+      metadata: {
+        user_id: String(req.user.id),
+        type: 'pro_subscription'
+      },
+      success_url: `${FRONTEND_URL}/dashboard/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${FRONTEND_URL}/dashboard/billing/cancel`
+    });
+
+    res.json({ url: session.url });
+  } catch (e) {
+    console.error('POST /payments/subscribe-pro error:', e);
+    res.status(500).json({ error: 'Server error', detail: e.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
 // AUTH: verify a session (used on the success page)
+// ─────────────────────────────────────────────────────────────
 router.get('/verify/:sessionId', authRequired, async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      'SELECT * FROM payments WHERE stripe_session_id=? AND user_id=?',
-      [req.params.sessionId, req.user.id]
-    );
-    if (!rows.length) return res.status(404).json({ error: 'Payment not found' });
-    const p = rows[0];
-
     // Fetch fresh from Stripe
-    try {
-      const session = await stripe.checkout.sessions.retrieve(req.params.sessionId);
-      if (session.payment_status === 'paid' && p.status !== 'paid') {
-        await markPaid(p.id, p.listing_id, p.days, session.payment_intent);
+    const session = await stripe.checkout.sessions.retrieve(req.params.sessionId);
+    
+    if (session.payment_status === 'paid') {
+      const type = session.metadata?.type;
+
+      if (type === 'featured_listing') {
+        const paymentId = Number(session.metadata?.payment_id);
+        if (paymentId) {
+          const [rows] = await pool.query('SELECT * FROM payments WHERE id=?', [paymentId]);
+          if (rows.length && rows[0].status !== 'paid') {
+            await markPaid(rows[0].id, rows[0].listing_id, rows[0].days, session.payment_intent);
+          }
+        }
       }
-    } catch {}
 
-    const [after] = await pool.query('SELECT * FROM payments WHERE id=?', [p.id]);
-    const [listing] = await pool.query(
-      'SELECT id, title, is_featured, featured_until FROM listings WHERE id=?',
-      [p.listing_id]
-    );
+      if (type === 'pro_subscription') {
+        await upgradeUserToPro(Number(session.metadata?.user_id));
+      }
+    }
 
-    res.json({ payment: after[0], listing: listing[0] });
+    res.json({ success: true, type: session.metadata?.type });
   } catch (e) {
     console.error('GET /payments/verify error:', e);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
+// ─────────────────────────────────────────────────────────────
 // AUTH: my billing history
+// ─────────────────────────────────────────────────────────────
 router.get('/mine', authRequired, async (req, res) => {
-  const [rows] = await pool.query(
-    `SELECT p.*, l.title AS listing_title, l.slug AS listing_slug
-     FROM payments p
-     LEFT JOIN listings l ON l.id = p.listing_id
-     WHERE p.user_id = ?
-     ORDER BY p.created_at DESC
-     LIMIT 100`,
-    [req.user.id]
-  );
-  res.json(rows);
+  try {
+    const [rows] = await pool.query(
+      `SELECT p.*, l.title AS listing_title, l.slug AS listing_slug
+       FROM payments p
+       LEFT JOIN listings l ON l.id = p.listing_id
+       WHERE p.user_id = ?
+       ORDER BY p.created_at DESC
+       LIMIT 100`,
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
-// PUBLIC (Stripe webhook): mark payment paid + feature the listing
-// IMPORTANT: this route needs the raw body — we mount it specially in server.js
+// ─────────────────────────────────────────────────────────────
+// PUBLIC (Stripe webhook)
+// ─────────────────────────────────────────────────────────────
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   let event;
   try {
@@ -137,14 +189,21 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   try {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      const paymentId = Number(session.metadata?.payment_id);
+      const type = session.metadata?.type;
 
-      if (paymentId) {
-        const [rows] = await pool.query('SELECT * FROM payments WHERE id=?', [paymentId]);
-        if (rows.length) {
-          const p = rows[0];
-          await markPaid(p.id, p.listing_id, p.days, session.payment_intent);
+      if (type === 'featured_listing') {
+        const paymentId = Number(session.metadata?.payment_id);
+        if (paymentId) {
+          const [rows] = await pool.query('SELECT * FROM payments WHERE id=?', [paymentId]);
+          if (rows.length) {
+            const p = rows[0];
+            await markPaid(p.id, p.listing_id, p.days, session.payment_intent);
+          }
         }
+      }
+
+      if (type === 'pro_subscription') {
+        await upgradeUserToPro(Number(session.metadata?.user_id));
       }
     }
   } catch (e) {
@@ -154,7 +213,9 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   res.json({ received: true });
 });
 
-// Shared helper: mark payment paid + feature the listing for N days
+// ─────────────────────────────────────────────────────────────
+// Shared helpers
+// ─────────────────────────────────────────────────────────────
 async function markPaid(paymentId, listingId, days, paymentIntent) {
   await pool.query(
     `UPDATE payments
@@ -176,23 +237,16 @@ async function markPaid(paymentId, listingId, days, paymentIntent) {
   );
 }
 
-
-// Mock upgrade (replace with real Stripe later)
-router.post('/mock-upgrade', authRequired, async (req, res) => {
-  try {
-    // Give them the "pro" plan for 30 days
-    await pool.query(
-      `UPDATE users 
-       SET subscription_plan = 'pro', 
-           subscription_expires_at = DATE_ADD(NOW(), INTERVAL 30 DAY)
-       WHERE id = ?`,
-      [req.user.id]
-    );
-    res.json({ message: 'Upgraded to Pro successfully!' });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
+async function upgradeUserToPro(userId) {
+  if (!userId) return;
+  await pool.query(
+    `UPDATE users 
+     SET subscription_plan = 'pro', 
+         subscription_expires_at = DATE_ADD(NOW(), INTERVAL ? DAY)
+     WHERE id = ?`,
+    [PRO_DAYS, userId]
+  );
+  console.log(`✅ User ${userId} upgraded to Pro successfully!`);
+}
 
 module.exports = router;
