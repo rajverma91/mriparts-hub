@@ -22,10 +22,11 @@ async function sendResetEmail(to, resetUrl) {
   });
 }
 
-async function sendInquiryEmail({ to, listingTitle, listingUrl, buyer }) {
+async function sendInquiryEmail({ to, bcc, listingTitle, listingUrl, buyer }) {
   await transporter.sendMail({
     from: process.env.MAIL_FROM,
     to,
+    bcc, // ← ADD THIS LINE
     replyTo: buyer.email,
     subject: `New inquiry: ${listingTitle}`,
     html: `
@@ -39,9 +40,7 @@ async function sendInquiryEmail({ to, listingTitle, listingUrl, buyer }) {
         ${buyer.message}
       </p>
       <hr/>
-      <p style="color:#6b7280;font-size:13px;">
-        Reply directly to this email to answer ${buyer.name}.
-      </p>
+      <p style="color:#6b7280;font-size:13px;">Reply directly to this email to answer ${buyer.name}.</p>
     `
   });
 }

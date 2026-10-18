@@ -5,6 +5,9 @@ const { sendInquiryEmail } = require('../utils/mailer');
 
 const router = express.Router();
 
+// Set your admin email here
+const ADMIN_EMAIL = 'rbverma2119@gmail.com';
+
 // PUBLIC: buyer sends an inquiry
 router.post('/', async (req, res) => {
   try {
@@ -19,7 +22,7 @@ router.post('/', async (req, res) => {
 
     // Fetch listing + seller
     const [rows] = await pool.query(
-      `SELECT l.id, l.title, l.user_id, u.email AS seller_email, u.name AS seller_name
+      `SELECT l.id, l.title, l.user_id, l.slug, u.email AS seller_email, u.name AS seller_name
        FROM listings l
        JOIN users u ON u.id = l.user_id
        WHERE l.id=? AND l.status='active'`,
@@ -36,11 +39,12 @@ router.post('/', async (req, res) => {
       [listing.id, listing.user_id, buyer_name, buyer_email, buyer_phone || null, message]
     );
 
-    // Email seller (non-blocking — API succeeds even if mail fails)
-    const listingUrl = `${process.env.FRONTEND_URL}/listings/${listing.id}`;
+    // Email seller (and BCC the admin)
+    const listingUrl = `${process.env.FRONTEND_URL}/listings/${listing.slug || listing.id}`;
     try {
       await sendInquiryEmail({
         to: listing.seller_email,
+        bcc: ADMIN_EMAIL, // ← Sends a hidden copy to you
         listingTitle: listing.title,
         listingUrl,
         buyer: { name: buyer_name, email: buyer_email, phone: buyer_phone, message }
