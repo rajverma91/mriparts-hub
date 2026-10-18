@@ -1,4 +1,8 @@
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { api } from '@/lib/api';
 
 const PLANS = [
   {
@@ -6,7 +10,7 @@ const PLANS = [
     price: '$0',
     period: '/month',
     features: [
-      'Unlimited listings',
+      '1 active listing',
       'Email verification badge',
       'Up to 10 photos per listing',
       'Basic analytics',
@@ -20,7 +24,7 @@ const PLANS = [
     price: '$49',
     period: '/listing/month',
     features: [
-      'Everything in Free',
+      'Keep your 1 free listing',
       'Homepage placement',
       'Gold FEATURED badge',
       'Top of search results',
@@ -34,19 +38,36 @@ const PLANS = [
     price: '$199',
     period: '/month',
     features: [
-      'Everything in Featured',
+      'Unlimited listings',
       'Unlimited featured listings',
       'Company logo on profile',
       'Whitelisted on seller directory',
       'Dedicated account manager',
       'Priority email & phone support',
     ],
-    cta: 'Coming soon',
+    cta: 'Upgrade to Pro',
     highlight: false,
   },
 ];
 
 export default function ProAccountPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  async function handleUpgrade() {
+    setLoading(true);
+    try {
+      // Calls the mock-upgrade endpoint we created earlier
+      await api.post('/payments/mock-upgrade', {});
+      alert('Success! You are now a Pro seller. You can post unlimited listings.');
+      router.push('/dashboard');
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="container" style={{ padding: '40px 20px', maxWidth: 1080 }}>
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
@@ -85,13 +106,25 @@ export default function ProAccountPage() {
                 <li key={f}>✓ {f}</li>
               ))}
             </ul>
-            <Link
-              href={p.name === 'Featured' ? '/dashboard' : '/register'}
-              className={p.highlight ? 'btn' : 'btn btn-outline'}
-              style={{ display: 'block', textAlign: 'center', padding: '10px 20px' }}
-            >
-              {p.cta}
-            </Link>
+            
+            {p.name === 'Pro Seller' ? (
+              <button
+                onClick={handleUpgrade}
+                disabled={loading}
+                className="btn btn-outline"
+                style={{ display: 'block', width: '100%', textAlign: 'center', padding: '10px 20px' }}
+              >
+                {loading ? 'Upgrading...' : p.cta}
+              </button>
+            ) : (
+              <Link
+                href={p.name === 'Featured' ? '/dashboard' : '/register'}
+                className={p.highlight ? 'btn' : 'btn btn-outline'}
+                style={{ display: 'block', textAlign: 'center', padding: '10px 20px' }}
+              >
+                {p.cta}
+              </Link>
+            )}
           </div>
         ))}
       </div>

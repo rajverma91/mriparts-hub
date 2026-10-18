@@ -176,4 +176,23 @@ async function markPaid(paymentId, listingId, days, paymentIntent) {
   );
 }
 
+
+// Mock upgrade (replace with real Stripe later)
+router.post('/mock-upgrade', authRequired, async (req, res) => {
+  try {
+    // Give them the "pro" plan for 30 days
+    await pool.query(
+      `UPDATE users 
+       SET subscription_plan = 'pro', 
+           subscription_expires_at = DATE_ADD(NOW(), INTERVAL 30 DAY)
+       WHERE id = ?`,
+      [req.user.id]
+    );
+    res.json({ message: 'Upgraded to Pro successfully!' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

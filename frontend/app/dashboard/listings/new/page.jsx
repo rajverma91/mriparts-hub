@@ -31,28 +31,36 @@ export default function NewListing() {
   const update = (k, v) => setForm({ ...form, [k]: v });
 
   async function submit(e) {
-    e.preventDefault();
-    setError('');
-    setNeedsVerify(false);
+  e.preventDefault();
+  setError('');
+  setNeedsVerify(false);
 
-    try {
-      await api.post('/listings', {
-        ...form,
-        image_url: form.gallery_json[0] || null,
-        category_id: form.category_id || null,
-        brand_id: form.brand_id || null,
-        year: form.year || null
-      });
-      alert('Listing submitted for review.');
-      router.push('/dashboard');
-    } catch (err) {
-      setError(err.message);
-      // Detect the email-verification gate from the backend
-      if (err.message.toLowerCase().includes('verify')) {
-        setNeedsVerify(true);
+  try {
+    await api.post('/listings', {
+      ...form,
+      image_url: form.gallery_json[0] || null,
+      category_id: form.category_id || null,
+      brand_id: form.brand_id || null,
+      year: form.year || null
+    });
+    alert('Listing submitted for review.');
+    router.push('/dashboard');
+  } catch (err) {
+    // ── CATCH LIMIT ERROR ──
+    if (err.message === 'LIMIT_REACHED') {
+      if (confirm('You have reached the 1 free listing limit. Upgrade to a Pro account to post unlimited listings?')) {
+        router.push('/pro-account');
       }
+      return;
+    }
+    // ── END LIMIT CATCH ──
+
+    setError(err.message);
+    if (err.message.toLowerCase().includes('verify')) {
+      setNeedsVerify(true);
     }
   }
+}
 
   return (
     <form onSubmit={submit} className="container" style={{ padding: '30px 20px', maxWidth: 800 }}>

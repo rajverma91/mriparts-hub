@@ -32,6 +32,24 @@ function normalizeGallery(value) {
   return null;
 }
 
+// Helper: Get user's subscription plan
+async function getUserPlan(userId) {
+  const [rows] = await pool.query(
+    'SELECT subscription_plan, subscription_expires_at FROM users WHERE id=?',
+    [userId]
+  );
+  
+  if (!rows.length) return { plan: 'free', isActive: false };
+  
+  const user = rows[0];
+  const isExpired = user.subscription_expires_at && new Date(user.subscription_expires_at) < new Date();
+  
+  return {
+    plan: isExpired ? 'free' : (user.subscription_plan || 'free'),
+    isActive: !isExpired
+  };
+}
+
 // ─────────────────────────────────────────────────────────────
 // PUBLIC: advert type counts (MUST be before /:id)
 // ─────────────────────────────────────────────────────────────
@@ -231,7 +249,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// AUTH: create listing
+// AUTH: create listing (WITH SUBSCRIPTION LIMIT CHECK)
 // ─────────────────────────────────────────────────────────────
 router.post('/', authRequired, verifiedRequired, async (req, res) => {
   try {
@@ -240,6 +258,30 @@ router.post('/', authRequired, verifiedRequired, async (req, res) => {
     if (!b.title || !String(b.title).trim()) {
       return res.status(400).json({ error: 'Title required' });
     }
+
+    // ── SUBSCRIPTION / LIMIT CHECK ──
+    // 1. Get user's plan
+    const { plan } = await getUserPlan(req.user.id);
+
+    // 2. Count their current active/pending listings
+    const [countRows] = await pool.query(
+      `SELECT COUNT(*) AS total FROM listings 
+       WHERE user_id = ? AND status != 'deleted'`,
+      [req.user.id]
+    );
+    const totalListings = countRows[0].total;
+
+    // 3. Apply rules:
+    // - Free plan: limit to 1 listing
+    // - Pro/Paid plan: unlimited listings
+    if (totalListings >= 1 && plan === 'free') {
+      return res.status(403).json({
+        error: 'LIMIT_REACHED',
+        message: 'You have reached the 1 free listing limit. Please upgrade your account to post more.',
+        requiresSubscription: true
+      });
+    }
+    // ── END SUBSCRIPTION CHECK ──
 
     const title = String(b.title).trim().slice(0, 255);
     const slug  = `${slugify(title)}-${Date.now()}`;

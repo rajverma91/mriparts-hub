@@ -48,9 +48,11 @@ export default function Header() {
         <div className="hdr-top-inner">
 
           {/* Logo — DO NOT wrap in <Link> because BrandLogo already contains one */}
+         
           <div className="hdr-logo">
+             <Link href="/">
             <img src={Logo.src}  alt="MRI Safe Products Logo" className="logoImage"/>
-            
+            </Link>
           </div>
 
           {/* Right-side controls */}
