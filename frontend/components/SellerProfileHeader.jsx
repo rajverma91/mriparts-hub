@@ -36,7 +36,7 @@ export default function SellerProfileHeader({ seller }) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 8, paddingBottom: 6, flexWrap: 'wrap' }}>
+          {/* <div style={{ display: 'flex', gap: 8, paddingBottom: 6, flexWrap: 'wrap' }}>
             {seller.phone && (
               <a className="btn" href={`tel:${seller.phone}`}>📞 Call</a>
             )}
@@ -51,7 +51,7 @@ export default function SellerProfileHeader({ seller }) {
                 💬 WhatsApp
               </a>
             )}
-          </div>
+          </div> */}
         </div>
 
         {/* Reputation + stats row */}

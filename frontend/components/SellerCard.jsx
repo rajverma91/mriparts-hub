@@ -62,7 +62,7 @@ export default function SellerCard({ seller }) {
         )}
       </div>
 
-      <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      {/* <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {seller.seller_phone && (
           <a className="btn" href={`tel:${seller.seller_phone}`} style={{ flex: 1, textAlign: 'center' }}>
             📞 Call Seller
@@ -88,7 +88,7 @@ export default function SellerCard({ seller }) {
             💬 Chat on WhatsApp
           </a>
         )}
-      </div>
+      </div> */}
 
       {sellerId && (
         <Link

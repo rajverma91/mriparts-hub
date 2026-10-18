@@ -7,24 +7,55 @@ import styles from '../app/css/AuctionBanner.module.css';
 // 1. Dynamically import the Slider component (Disables SSR)
 const Slider = dynamic(() => import('react-slick'), { ssr: false });
 
+// 2. Custom arrow components
+//    Destructuring `slideCount` and `currentSlide` prevents them from
+//    being spread onto the DOM <button>, which removes the React warning:
+//    "React does not recognize the `slideCount` prop on a DOM element."
+const PrevArrow = ({ currentSlide, slideCount, ...props }) => (
+  <button
+    {...props}
+    type="button"
+    className={`${styles.customArrow} ${
+      currentSlide === 0 ? styles.arrowDisabled : ''
+    }`}
+    aria-label="Previous slide"
+    aria-disabled={currentSlide === 0}
+  >
+    &#10094;
+  </button>
+);
+
+const NextArrow = ({ currentSlide, slideCount, ...props }) => (
+  <button
+    {...props}
+    type="button"
+    className={`${styles.customArrow} ${
+      currentSlide === slideCount - 1 ? styles.arrowDisabled : ''
+    }`}
+    aria-label="Next slide"
+    aria-disabled={currentSlide === slideCount - 1}
+  >
+    &#10095;
+  </button>
+);
+
 const AuctionBanner = () => {
-  
-  // 2. Slick Slider Settings
+  // 3. Slick Slider Settings
   const settings = {
     dots: false,           // We are using our own arrows, so set dots to false
     infinite: true,        // Loop back to the start
     speed: 500,            // Transition speed in ms
     slidesToShow: 1,       // Show one full banner at a time
     slidesToScroll: 1,     // Scroll one banner at a time
-    arrows: true,          // Enable default arrows (or set false if using your own)
-    prevArrow: <button className={styles.customArrow}>&#10094;</button>,
-    nextArrow: <button className={styles.customArrow}>&#10095;</button>,
+    arrows: true,          // Enable arrows (custom ones below)
+    prevArrow: <PrevArrow />,
+    nextArrow: <NextArrow />,
   };
 
   return (
     <div className={styles.sliderWrapper}>
       <Slider {...settings}>
-        
+
         {/* ==========================================
             SLIDE 1: USED HOSPITAL BEDS
         ========================================== */}
@@ -35,14 +66,23 @@ const AuctionBanner = () => {
               <div className={styles.hbBedIcon}>🛏️</div>
             </div>
             <div className={styles.hbTextSection}>
-              <h2>USED HOSPITALBEDS<br/>AND MORE!</h2>
+              <h2>USED HOSPITALBEDS<br />AND MORE!</h2>
               <div className={styles.hbUrlBox}>USED-HOSPITALBEDS.COM</div>
               <p>We make hospital equipment available for everyone!</p>
             </div>
             <div className={styles.hbImagesSection}>
-              <img src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=150&h=150" alt="Cart" />
-              <img src="https://images.unsplash.com/photo-1583324113626-70df0f4deaab?auto=format&fit=crop&q=80&w=150&h=150" alt="Bed" />
-              <img src="https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=150&h=150" alt="Stretcher" />
+              <img
+                src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=150&h=150"
+                alt="Cart"
+              />
+              <img
+                src="https://images.unsplash.com/photo-1583324113626-70df0f4deaab?auto=format&fit=crop&q=80&w=150&h=150"
+                alt="Bed"
+              />
+              <img
+                src="https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=150&h=150"
+                alt="Stretcher"
+              />
             </div>
             <div className={styles.hbInfoSection}>
               <div className={styles.hbTags}>
@@ -64,12 +104,20 @@ const AuctionBanner = () => {
         <div className={styles.slide}>
           <div className={`${styles.bannerContainer} ${styles.bgDarkBlue}`}>
             <div className={styles.maTextLeft}>
-              <p>POWERING THE <span className={styles.greenText}>GLOBAL CIRCULAR ECONOMY</span> FOR SURPLUS MEDICAL EQUIPMENT.</p>
+              <p>
+                POWERING THE{' '}
+                <span className={styles.greenText}>GLOBAL CIRCULAR ECONOMY</span>{' '}
+                FOR SURPLUS MEDICAL EQUIPMENT.
+              </p>
             </div>
             <div className={styles.maCenter}>
-              <h1><span className={styles.greenText}>+</span>3MA</h1>
+              <h1>
+                <span className={styles.greenText}>+</span>3MA
+              </h1>
               <p className={styles.maSub}>A TB AUCTIONS BRAND</p>
-              <div className={styles.maBottomText}>EUROPE'S LEADING MEDICAL EQUIPMENT AUCTION HOUSE</div>
+              <div className={styles.maBottomText}>
+                EUROPE'S LEADING MEDICAL EQUIPMENT AUCTION HOUSE
+              </div>
               <div className={styles.maGlobeGraphic}></div>
             </div>
             <div className={styles.maFeaturesRight}>
@@ -99,29 +147,44 @@ const AuctionBanner = () => {
                 <div className={styles.mpCircle}></div>
                 <h2>Mediproma</h2>
               </div>
-              <p>Project Management<br/>Rigging, Crating, Shipping</p>
+              <p>
+                Project Management<br />
+                Rigging, Crating, Shipping
+              </p>
             </div>
             <div className={styles.mpEquipmentSection}>
               <div className={styles.mpItem}>
                 <div className={styles.mpVerticalText}>Imaging</div>
-                <img src="https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=150&h=200" alt="Imaging" />
+                <img
+                  src="https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=150&h=200"
+                  alt="Imaging"
+                />
               </div>
               <div className={styles.mpItem}>
                 <div className={styles.mpVerticalText}>Ultrasound</div>
-                <img src="https://images.unsplash.com/photo-1516549655169-df83a25e10bf?auto=format&fit=crop&q=80&w=150&h=200" alt="Ultrasound" />
+                <img
+                  src="https://images.unsplash.com/photo-1516549655169-df83a25e10bf?auto=format&fit=crop&q=80&w=150&h=200"
+                  alt="Ultrasound"
+                />
               </div>
               <div className={styles.mpItem}>
                 <div className={styles.mpVerticalText}>Diagnostic</div>
-                <img src="https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=150&h=200" alt="Diagnostic" />
+                <img
+                  src="https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=150&h=200"
+                  alt="Diagnostic"
+                />
               </div>
               <div className={styles.mpItem}>
                 <div className={styles.mpVerticalText}>Treatment</div>
-                <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=150&h=200" alt="Treatment" />
+                <img
+                  src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=150&h=200"
+                  alt="Treatment"
+                />
               </div>
             </div>
             <div className={styles.mpCtaSection}>
               <button className={styles.mpButton}>
-                See All<br/>Equipment
+                See All<br />Equipment
               </button>
             </div>
           </div>

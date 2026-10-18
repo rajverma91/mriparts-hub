@@ -18,7 +18,7 @@ export default function ShareButtons({ url, title }) {
 
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 10 }}>
-      <span style={{ fontSize: 13, color: '#6b7280' }}>Share:</span>
+      {/* <span style={{ fontSize: 13, color: '#6b7280' }}>Share:</span>
       {links.map(([name, href]) => (
         <a key={name} href={href} target="_blank" rel="noreferrer"
            style={{ fontSize: 13, color: '#0d6efd' }}>
@@ -26,7 +26,7 @@ export default function ShareButtons({ url, title }) {
         </a>
       ))}
       <button onClick={copyLink} className="btn btn-outline"
-              style={{ padding: '2px 10px', fontSize: 13 }}>Copy</button>
+              style={{ padding: '2px 10px', fontSize: 13 }}>Copy</button> */}
     </div>
   );
 }
