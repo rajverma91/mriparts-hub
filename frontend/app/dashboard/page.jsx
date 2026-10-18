@@ -45,39 +45,40 @@ export default function DashboardPage() {
   return (
     <div className="container" style={{ padding: '30px 20px' }}>
       {/* Verification banner */}
-      {!me.email_verified && (
-        <div
-          className="card"
-          style={{
-            padding: '14px 18px',
-            marginBottom: 20,
-            background: '#fef3c7',
-            border: '1px solid #fde68a',
-            color: '#92400e',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: 10
-          }}
-        >
-          <div>
-            <b>⚠️ Your email isn't verified yet.</b>{' '}
-            <span style={{ color: '#78350f' }}>
-              Verify to publish new listings and appear in search results.
-            </span>
-          </div>
-          {sent ? (
-            <span style={{ color: '#166534', fontWeight: 600 }}>
-              ✓ Verification email sent
-            </span>
-          ) : (
-            <button className="btn" onClick={sendVerification} disabled={sending}>
-              {sending ? 'Sending…' : 'Send verification email'}
-            </button>
-          )}
-        </div>
-      )}
+     {/* Verification banner */}
+{me && !me.email_verified && (  // Changed from !me.email_verified to strictly check
+  <div
+    className="card"
+    style={{
+      padding: '14px 18px',
+      marginBottom: 20,
+      background: '#fef3c7',
+      border: '1px solid #fde68a',
+      color: '#92400e',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 10
+    }}
+  >
+    <div>
+      <b>⚠️ Your email isn't verified yet.</b>{' '}
+      <span style={{ color: '#78350f' }}>
+        Verify to publish new listings and appear in search results.
+      </span>
+    </div>
+    {sent ? (
+      <span style={{ color: '#166534', fontWeight: 600 }}>
+        ✓ Verification email sent
+      </span>
+    ) : (
+      <button className="btn" onClick={sendVerification} disabled={sending}>
+        {sending ? 'Sending…' : 'Send verification email'}
+      </button>
+    )}
+  </div>
+)}
 
       {me.email_verified && (
         <div

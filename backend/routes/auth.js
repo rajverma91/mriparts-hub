@@ -84,13 +84,19 @@ router.post('/login', async (req, res) => {
   }
 });
 
+
 // ME
 router.get('/me', authRequired, async (req, res) => {
-  const [rows] = await pool.query(
-    'SELECT id,name,email,role,company,phone,country FROM users WHERE id=?',
-    [req.user.id]
-  );
-  res.json(rows[0] || null);
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, name, email, role, company, phone, country, email_verified, is_verified FROM users WHERE id=?',
+      [req.user.id]
+    );
+    res.json(rows[0] || null);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 // FORGOT PASSWORD
