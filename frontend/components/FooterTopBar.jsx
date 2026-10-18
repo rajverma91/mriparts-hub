@@ -5,6 +5,7 @@ const LINKS = [
   { href: '/stats',           label: 'Statistics' },
   { href: '/agreements',      label: 'User Agreement' },
   { href: '/faq',             label: "FAQ's" },
+  { href: '/documentation',   label: "Documentation" },
   { href: '/sitemap',         label: 'Sitemap' },
   { href: '/about',           label: 'About Us' },
   { href: '/contacts',        label: 'Contacts' },
