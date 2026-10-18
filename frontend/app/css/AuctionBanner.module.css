@@ -1,147 +1,87 @@
-/* =========================================
-   SLICK SLIDER OVERRIDES & WRAPPER
-========================================= */
-.sliderWrapper {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px 50px; /* Space for arrows */
+/* Outer container — full width */
+.sliderContainer {
+  width: 1200px;
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin: 30px auto;
 }
 
-/* Ensure the track doesn't overflow and break layout */
-.sliderWrapper :global(.slick-list) {
+/* Slider wrapper — fixed 120px height, full width */
+.sliderWrapper {
+  position: relative;
+  width: 100%;
+  height: 120px;        /* <-- fixed height */
+  box-sizing: border-box;
+}
+
+/* Each slide must fill the 120px height */
+.slide {
+  height: 120px;
+  box-sizing: border-box;
+}
+
+/* Image card fills the slide */
+.imageCard {
+  width: 100%;
+  height: 120px;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: 10px;
+  background: #f2f2f2;
 }
 
-/* Custom Arrows for Slick */
+.imageCard img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;    /* keeps image proportional inside 120px */
+  display: block;
+}
+
+/* ---- Arrows ---- */
 .customArrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
-  background: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   border: none;
-  font-size: 3rem;
-  color: #ccc;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
   cursor: pointer;
-  transition: color 0.2s;
-}
-.customArrow:hover { color: #888; }
-
-/* Position the custom arrows outside the slider */
-.sliderWrapper :global(.slick-prev) { left: -40px; }
-.sliderWrapper :global(.slick-next) { right: -40px; }
-
-/* Base Slide Styles */
-.slide {
-  width: 100%;
-  outline: none; /* Removes blue focus outline on click */
-}
-
-.bannerContainer {
   display: flex;
-  height: 180px;
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-  position: relative;
-}
-
-/* =========================================
-   SLIDE 1: USED HOSPITAL BEDS STYLES
-========================================= */
-.bgLightBlue { background-color: #e6f2fa; }
-
-.hbIconBox {
-  width: 120px;
-  background-color: #0099cc;
-  display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 2rem;
-  position: relative;
-}
-.hbPlusIcon { position: absolute; top: 15px; right: 20px; font-weight: bold; font-size: 1.5rem; }
-.hbBedIcon { font-size: 4rem; }
-
-.hbTextSection { padding: 20px; width: 250px; }
-.hbTextSection h2 { font-size: 1.1rem; color: #000; margin: 0 0 5px 0; line-height: 1.1; }
-.hbUrlBox { background-color: #0099cc; color: white; font-weight: bold; display: inline-block; padding: 4px 8px; margin-bottom: 5px; font-size: 0.9rem; }
-.hbTextSection p { font-size: 0.75rem; font-weight: bold; margin: 0; color: #000; }
-
-.hbImagesSection { flex: 1; display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 10px; }
-.hbImagesSection img { height: 100px; object-fit: contain; mix-blend-mode: multiply; }
-
-.hbInfoSection { width: 250px; padding: 20px 20px 20px 0; display: flex; flex-direction: column; justify-content: center; }
-.hbTags { display: flex; gap: 5px; margin-bottom: 15px; }
-.hbTags span { background-color: #0099cc; color: white; font-size: 0.7rem; padding: 4px 8px; border-radius: 2px; }
-.hbContact p { color: #1a2b4c; font-weight: bold; font-size: 0.85rem; margin: 5px 0; }
-
-/* =========================================
-   SLIDE 2: 3MA STYLES
-========================================= */
-.bgDarkBlue { 
-  background-color: #0b0f24; 
-  color: white; 
-  background-image: radial-gradient(circle at center, #1a2b4c 0%, #0b0f24 70%);
-}
-.greenText { color: #a3e635; }
-
-.maTextLeft { width: 250px; padding: 20px; display: flex; align-items: center; font-size: 0.85rem; font-weight: bold; }
-.maCenter { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-.maCenter h1 { font-size: 4rem; margin: 0; font-weight: 900; letter-spacing: -2px; display: flex; align-items: center; }
-.maSub { font-size: 0.7rem; letter-spacing: 2px; margin: -5px 0 15px 0; color: #ccc; }
-.maBottomText { font-size: 0.8rem; font-weight: bold; letter-spacing: 1px; z-index: 2; }
-
-.maFeaturesRight { width: 280px; padding: 20px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
-.maFeatureItem { display: flex; align-items: flex-start; gap: 10px; }
-.maFeatureItem p { font-size: 0.65rem; font-weight: bold; margin: 0; line-height: 1.3; color: #ddd; }
-.maFeatureIcon { color: #a3e635; font-size: 1.2rem; }
-
-/* =========================================
-   SLIDE 3: MEDIPROMA STYLES
-========================================= */
-.bgWhite { background-color: #f5f5f5; }
-
-.mpLogoSection { width: 250px; padding: 20px; display: flex; flex-direction: column; justify-content: center; }
-.mpLogoGraphic { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-.mpCircle { width: 40px; height: 40px; border-radius: 50%; border: 5px solid #a3e635; border-right-color: #00a8b5; }
-.mpLogoGraphic h2 { color: #00a8b5; margin: 0; font-size: 2rem; font-weight: 900; }
-.mpLogoSection p { font-size: 0.75rem; color: #333; margin: 0; font-weight: 500; line-height: 1.2; }
-
-.mpEquipmentSection { flex: 1; display: flex; height: 100%; }
-.mpItem { flex: 1; display: flex; height: 100%; border-right: 2px solid #fff; }
-.mpVerticalText { 
-  background-color: #a3e635; 
-  writing-mode: vertical-rl; 
-  text-orientation: mixed; 
-  transform: rotate(180deg);
-  display: flex; align-items: center; justify-content: center;
-  padding: 10px 5px; font-weight: bold; color: #fff; font-size: 0.9rem;
-}
-.mpItem img { flex: 1; width: 100%; height: 100%; object-fit: cover; }
-
-.mpCtaSection { width: 200px; background-color: #008ca8; display: flex; align-items: center; justify-content: center; }
-.mpButton { 
-  background: none; border: none; color: white; font-size: 1.2rem; font-weight: bold; 
-  cursor: pointer; text-align: center; line-height: 1.2;
+  transition: background 0.2s ease;
 }
 
-/* =========================================
-   RESPONSIVE
-========================================= */
-@media (max-width: 900px) {
-  .sliderWrapper { padding: 20px 10px; }
-  .customArrow { display: none; } /* Hide arrows on mobile, rely on swipe */
-  
-  .bannerContainer { height: auto; flex-direction: column; padding: 10px; }
-  .hbIconBox, .hbTextSection, .hbImagesSection, .hbInfoSection { width: 100%; padding: 10px; }
-  .maTextLeft, .maCenter, .maFeaturesRight { width: 100%; padding: 10px; text-align: center; }
-  .mpLogoSection, .mpEquipmentSection, .mpCtaSection { width: 100%; }
-  .mpEquipmentSection { height: 120px; }
+.customArrow:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+/* Override slick defaults so arrows sit inside the wrapper */
+.sliderWrapper :global(.slick-prev),
+.sliderWrapper :global(.slick-next) {
+  z-index: 10;
+}
+
+.customArrowPrev {
+  left: 8px;
+}
+
+.customArrowNext {
+  right: 8px;
+}
+
+/* --- Critical slick overrides for fixed 120px height --- */
+.sliderWrapper :global(.slick-list),
+.sliderWrapper :global(.slick-track),
+.sliderWrapper :global(.slick-slide),
+.sliderWrapper :global(.slick-slide) > div {
+  height: 120px !important;
+}
+
+.sliderWrapper :global(.slick-slide) > div {
+  display: block;
 }
