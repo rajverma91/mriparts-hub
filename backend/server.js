@@ -13,12 +13,34 @@ const uploadRoutes   = require('./routes/upload');
 const reviewRoutes   = require('./routes/reviews');
 const sellerRoutes   = require('./routes/sellers');
 const favoriteRoutes = require('./routes/favorites');
-const paymentRoutes  = require('./routes/payments');    // ← NEW
-const searchRoutes = require('./routes/search');
+const paymentRoutes  = require('./routes/payments');
+const searchRoutes   = require('./routes/search');
 
 const app = express();
 
-app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
+// ── CORS CONFIGURATION ──
+// Allow both your Vercel default URL and your custom domain
+const allowedOrigins = [
+  'https://mripartshub.com',
+  'https://www.mripartshub.com',
+  'https://mriparts-hub.vercel.app',
+  'http://localhost:3000' // for local development
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 
 // ⚠️ Stripe webhook must be mounted BEFORE express.json() — it needs the raw body
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
@@ -37,7 +59,7 @@ app.use('/api/upload',    uploadRoutes);
 app.use('/api/reviews',   reviewRoutes);
 app.use('/api/sellers',   sellerRoutes);
 app.use('/api/favorites', favoriteRoutes);
-app.use('/api/payments',  paymentRoutes);               // ← NEW
+app.use('/api/payments',  paymentRoutes);
 app.use('/api',           categoryRoutes);
 app.use('/api/admin',     adminRoutes);
 
