@@ -249,7 +249,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// AUTH: create listing (WITH SUBSCRIPTION LIMIT CHECK)
+// AUTH: create listing (WITH ADMIN BYPASS)
 // ─────────────────────────────────────────────────────────────
 router.post('/', authRequired, verifiedRequired, async (req, res) => {
   try {
@@ -259,78 +259,68 @@ router.post('/', authRequired, verifiedRequired, async (req, res) => {
       return res.status(400).json({ error: 'Title required' });
     }
 
-    // ── SUBSCRIPTION / LIMIT CHECK ──
-    // 1. Get user's plan
-    const { plan } = await getUserPlan(req.user.id);
-
-    // 2. Count their current active/pending listings
-    const [countRows] = await pool.query(
-      `SELECT COUNT(*) AS total FROM listings 
-       WHERE user_id = ? AND status != 'deleted'`,
-      [req.user.id]
-    );
-    const totalListings = countRows[0].total;
-
-    // 3. Apply rules:
-    // - Free plan: limit to 1 listing
-    // - Pro/Paid plan: unlimited listings
-    if (totalListings >= 1 && plan === 'free') {
-      return res.status(403).json({
-        error: 'LIMIT_REACHED',
-        message: 'You have reached the 1 free listing limit. Please upgrade your account to post more.',
-        requiresSubscription: true
-      });
+    // ── SUBSCRIPTION LIMIT CHECK ──
+    // Admins are exempt from this limit
+    if (req.user.role !== 'admin') {
+      const { plan } = await getUserPlan(req.user.id);
+      const [countRows] = await pool.query(
+        `SELECT COUNT(*) AS total FROM listings WHERE user_id = ? AND status != 'deleted'`,
+        [req.user.id]
+      );
+      if (countRows[0].total >= 1 && plan === 'free') {
+        return res.status(403).json({
+          error: 'LIMIT_REACHED',
+          message: 'You have reached the 1 free listing limit. Please upgrade your account to post more.',
+          requiresSubscription: true
+        });
+      }
     }
     // ── END SUBSCRIPTION CHECK ──
 
+    // ── HANDLE NEW BRAND ──
+    let finalBrandId = null;
+    if (b.brand_name && String(b.brand_name).trim()) {
+      const brandName = String(b.brand_name).trim().slice(0, 120);
+      
+      const [existing] = await pool.query('SELECT id FROM brands WHERE name = ?', [brandName]);
+      
+      if (existing.length > 0) {
+        finalBrandId = existing[0].id;
+      } else {
+        const [newBrand] = await pool.query('INSERT INTO brands (name) VALUES (?)', [brandName]);
+        finalBrandId = newBrand.insertId;
+      }
+    }
+
+    // ── INSERT LISTING ──
     const title = String(b.title).trim().slice(0, 255);
     const slug  = `${slugify(title)}-${Date.now()}`;
-
-    const gallery = Array.isArray(b.gallery_json) && b.gallery_json.length
-      ? b.gallery_json
-      : null;
+    const gallery = Array.isArray(b.gallery_json) && b.gallery_json.length ? b.gallery_json : null;
     const primary = b.image_url || (gallery ? gallery[0] : null);
     const price   = Number.isFinite(Number(b.price)) ? Number(b.price) : 0;
-    const advertType = ['sell','buy','auction'].includes(b.advert_type)
-      ? b.advert_type
-      : 'sell';
+    const advertType = ['sell','buy','auction'].includes(b.advert_type) ? b.advert_type : 'sell';
 
     const params = [
-      req.user.id,
-      title,
-      slug,
-      nn(b.description),
-      price,
-      nn(b.currency) || 'USD',
-      nn(b.condition_type) || 'used',
-      nn(b.category_id),
-      nn(b.brand_id),
-      nn(b.model),
-      nn(b.year),
-      nn(b.country),
-      nn(b.city),
-      nn(primary),
-      gallery ? JSON.stringify(gallery) : null,
-      advertType
+      req.user.id, title, slug, nn(b.description), price,
+      nn(b.currency) || 'USD', nn(b.condition_type) || 'used',
+      nn(b.category_id), finalBrandId, nn(b.model), 
+      nn(b.address), nn(b.city), nn(b.state), nn(b.pincode), nn(b.country),
+      nn(primary), gallery ? JSON.stringify(gallery) : null, advertType
     ];
 
     const [result] = await pool.query(
       `INSERT INTO listings
        (user_id, title, slug, description, price, currency, condition_type,
-        category_id, brand_id, model, year, country, city,
+        category_id, brand_id, model, address, city, state, pincode, country,
         image_url, gallery_json, advert_type, status)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending')`,
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending')`,
       params
     );
 
     res.json({ id: result.insertId, slug, status: 'pending' });
   } catch (e) {
     console.error('POST /listings error:', e);
-    res.status(500).json({
-      error: 'Server error',
-      detail: e.sqlMessage || e.message,
-      code: e.code
-    });
+    res.status(500).json({ error: 'Server error', detail: e.sqlMessage || e.message });
   }
 });
 
@@ -358,7 +348,7 @@ router.put('/:id', authRequired, async (req, res) => {
     await pool.query(
       `UPDATE listings SET
          title=?, description=?, price=?, currency=?, condition_type=?,
-         category_id=?, brand_id=?, model=?, year=?, country=?, city=?,
+         category_id=?, brand_id=?, model=?, address=?, city=?, state=?, pincode=?, country=?,
          image_url=?, gallery_json=?, advert_type=?
        WHERE id=?`,
       [
@@ -370,9 +360,11 @@ router.put('/:id', authRequired, async (req, res) => {
         nn(b.category_id),
         nn(b.brand_id),
         nn(b.model),
-        nn(b.year),
-        nn(b.country),
+        nn(b.address),
         nn(b.city),
+        nn(b.state),
+        nn(b.pincode),
+        nn(b.country),
         nn(primary),
         gallery ? JSON.stringify(gallery) : null,
         advertType,

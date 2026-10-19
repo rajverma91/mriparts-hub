@@ -14,7 +14,10 @@ export default function NewListing() {
   
   const [form, setForm] = useState({
     title: '', description: '', price: 0, currency: 'USD', condition_type: 'used',
-    category_id: '', brand_id: '', model: '', year: '', country: '', city: '',
+    category_id: '', 
+    brand_name: '', // Changed from brand_id to brand_name for text input
+    model: '', 
+    address: '', city: '', state: '', pincode: '', country: '',
     gallery_json: [],
     advert_type: 'sell' 
   });
@@ -44,25 +47,17 @@ export default function NewListing() {
         ...form,
         image_url: form.gallery_json[0] || null,
         category_id: form.category_id || null,
-        brand_id: form.brand_id || null,
-        year: form.year || null
       });
       
       toast.success('Listing submitted for review!', { id: toastId });
       router.push('/dashboard');
       
     } catch (err) {
-      // ── CATCH LIMIT ERROR ──
       if (err.message === 'LIMIT_REACHED') {
         toast.error('You have reached the 1 free listing limit.', { id: toastId });
-        
-        // Wait 1.5 seconds then redirect to pro-account
-        setTimeout(() => {
-          router.push('/pro-account');
-        }, 1500);
+        setTimeout(() => { router.push('/pro-account'); }, 1500);
         return;
       }
-      // ── END LIMIT CATCH ──
 
       toast.error(err.message, { id: toastId });
       setError(err.message);
@@ -77,52 +72,26 @@ export default function NewListing() {
     <form onSubmit={submit} className="container" style={{ padding: '30px 20px', maxWidth: 800 }}>
       <h1>New Listing</h1>
 
-      {error && !needsVerify && (
-        <div className="alert error">{error}</div>
-      )}
+      {error && !needsVerify && <div className="alert error">{error}</div>}
 
       {needsVerify && (
-        <div
-          className="alert"
-          style={{
-            background: '#fef3c7',
-            color: '#92400e',
-            border: '1px solid #fde68a',
-            padding: '14px 18px',
-            borderRadius: 8,
-            marginBottom: 16
-          }}
-        >
+        <div className="alert" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', padding: '14px 18px', borderRadius: 8, marginBottom: 16 }}>
           <b>⚠️ Please verify your email before creating listings.</b>
           <div style={{ marginTop: 8, fontSize: 14 }}>
-            Check your inbox for the verification link, or{' '}
-            <Link href="/dashboard" style={{ textDecoration: 'underline', color: '#78350f' }}>
-              go to your dashboard
-            </Link>{' '}
-            to resend it.
+            Check your inbox for the verification link, or <Link href="/dashboard" style={{ textDecoration: 'underline' }}>go to your dashboard</Link> to resend it.
           </div>
         </div>
       )}
 
       <div className="card" style={{ padding: 24, marginTop: 16 }}>
-        {/* Advert Type Selector */}
+        
+        {/* Advert Type */}
         <div className="form-row" style={{ marginBottom: 20 }}>
           <label>Advert type</label>
           <div style={{ display: 'flex', gap: 20, alignItems: 'center', padding: '6px 0' }}>
-            {[
-              ['sell',    'Sell'],
-              ['buy',     'Buy'],
-              ['auction', 'Auction']
-            ].map(([val, label]) => (
+            {[['sell', 'Sell'], ['buy', 'Buy'], ['auction', 'Auction']].map(([val, label]) => (
               <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 500 }}>
-                <input
-                  type="radio"
-                  name="advert_type"
-                  value={val}
-                  checked={form.advert_type === val}
-                  onChange={() => update('advert_type', val)}
-                  style={{ accentColor: '#0d6efd', width: 18, height: 18, margin: 0 }}
-                />
+                <input type="radio" name="advert_type" value={val} checked={form.advert_type === val} onChange={() => update('advert_type', val)} style={{ accentColor: '#0d6efd', width: 18, height: 18, margin: 0 }} />
                 {label}
               </label>
             ))}
@@ -136,15 +105,13 @@ export default function NewListing() {
 
         <div className="form-row">
           <label>Description</label>
-          <textarea rows={5} value={form.description}
-                    onChange={(e) => update('description', e.target.value)} />
+          <textarea rows={5} value={form.description} onChange={(e) => update('description', e.target.value)} />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div className="form-row">
             <label>Price</label>
-            <input type="number" value={form.price}
-                   onChange={(e) => update('price', e.target.value)} />
+            <input type="number" value={form.price} onChange={(e) => update('price', e.target.value)} />
           </div>
 
           <div className="form-row">
@@ -156,8 +123,7 @@ export default function NewListing() {
 
           <div className="form-row">
             <label>Condition</label>
-            <select value={form.condition_type}
-                    onChange={(e) => update('condition_type', e.target.value)}>
+            <select value={form.condition_type} onChange={(e) => update('condition_type', e.target.value)}>
               <option value="new">New</option>
               <option value="used">Used</option>
               <option value="refurbished">Refurbished</option>
@@ -172,43 +138,58 @@ export default function NewListing() {
             </select>
           </div>
 
+          {/* Updated Brand Field (Text Input with Datalist) */}
           <div className="form-row">
-            <label>Brand</label>
-            <select value={form.brand_id} onChange={(e) => update('brand_id', e.target.value)}>
-              <option value="">Select</option>
-              {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
+            <label>Brand / Manufacturer</label>
+            <input 
+              list="brand-options" 
+              value={form.brand_name} 
+              onChange={(e) => update('brand_name', e.target.value)} 
+              placeholder="Select or type a new brand"
+            />
+            <datalist id="brand-options">
+              {brands.map((b) => <option key={b.id} value={b.name} />)}
+            </datalist>
           </div>
 
           <div className="form-row">
             <label>Model</label>
             <input value={form.model} onChange={(e) => update('model', e.target.value)} />
           </div>
+        </div>
+
+        {/* New Address Fields */}
+        <h3 style={{ marginTop: 24, marginBottom: 12, fontSize: 18 }}>Location Details</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div className="form-row" style={{ gridColumn: '1 / -1' }}>
+            <label>Address</label>
+            <input value={form.address} onChange={(e) => update('address', e.target.value)} placeholder="Street address" />
+          </div>
+          
+          <div className="form-row">
+            <label>City</label>
+            <input value={form.city} onChange={(e) => update('city', e.target.value)} />
+          </div>
 
           <div className="form-row">
-            <label>Year</label>
-            <input type="number" value={form.year}
-                   onChange={(e) => update('year', e.target.value)} />
+            <label>State / Province</label>
+            <input value={form.state} onChange={(e) => update('state', e.target.value)} />
+          </div>
+
+          <div className="form-row">
+            <label>PIN / ZIP Code</label>
+            <input value={form.pincode} onChange={(e) => update('pincode', e.target.value)} />
           </div>
 
           <div className="form-row">
             <label>Country</label>
             <input value={form.country} onChange={(e) => update('country', e.target.value)} />
           </div>
-
-          <div className="form-row">
-            <label>City</label>
-            <input value={form.city} onChange={(e) => update('city', e.target.value)} />
-          </div>
         </div>
 
-        <div className="form-row" style={{ marginTop: 12 }}>
+        <div className="form-row" style={{ marginTop: 24 }}>
           <label>Photos</label>
-          <MultiImageUpload
-            images={form.gallery_json}
-            onChange={(urls) => update('gallery_json', urls)}
-            max={10}
-          />
+          <MultiImageUpload images={form.gallery_json} onChange={(urls) => update('gallery_json', urls)} max={10} />
         </div>
 
         <button className="btn" style={{ marginTop: 18 }}>Submit for review</button>

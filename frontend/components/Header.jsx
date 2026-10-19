@@ -1,24 +1,36 @@
 'use client';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { getToken, clearToken, api } from '@/lib/api';
-import BrandLogo from './BrandLogo';
 import TopNav from './TopNav';
 import Logo from '../app/img/MRI_safe_products_Logohh.png';
 
 export default function Header() {
-  const [user, setUser]                   = useState(null);
-  const [savedCount, setSavedCount]       = useState(0);
-  const [unreadCount, setUnreadCount]     = useState(0);
+  const [user, setUser]               = useState(null);
+  const [savedCount, setSavedCount]   = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   const router = useRouter();
+  const pathname = usePathname(); // ← ADDED: Tracks route changes
 
+  // 1. Check token whenever the page changes
   useEffect(() => {
     const t = getToken();
-    if (!t) return;
-    try { setUser(JSON.parse(atob(t.split('.')[1]))); } catch {}
-  }, []);
+    if (!t) {
+      setUser(null);
+      setSavedCount(0);
+      setUnreadCount(0);
+      return;
+    }
+    try {
+      const payload = JSON.parse(atob(t.split('.')[1]));
+      setUser(payload);
+    } catch {
+      setUser(null);
+    }
+  }, [pathname]); // ← ADDED: Runs on every navigation
 
+  // 2. Fetch counts when user logs in
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -47,11 +59,10 @@ export default function Header() {
       <div className="hdr-top">
         <div className="hdr-top-inner">
 
-          {/* Logo — DO NOT wrap in <Link> because BrandLogo already contains one */}
-         
+          {/* Logo */}
           <div className="hdr-logo">
-             <Link href="/">
-            <img src={Logo.src}  alt="MRI Safe Products Logo" className="logoImage"/>
+            <Link href="/">
+              <img src={Logo.src} alt="MRI Safe Products Logo" className="logoImage" />
             </Link>
           </div>
 
@@ -83,7 +94,7 @@ export default function Header() {
               {savedCount > 0 && <span className="hdr-badge">{savedCount}</span>}
             </Link>
 
-            {/* Sign in */}
+            {/* Auth Section */}
             {user ? (
               <>
                 {user.role === 'admin' && (

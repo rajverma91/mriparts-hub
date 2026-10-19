@@ -108,14 +108,26 @@ export default function AdminPage() {
                   <td style={{ padding: 8 }}>
                     <span className={`badge ${l.status}`}>{l.status}</span>
                   </td>
-                  <td style={{ padding: 8 }}>
-                    <button className="btn" style={{ padding: '4px 10px', marginRight: 4 }}
-                            onClick={() => setListingStatus(l.id, 'active')}>Approve</button>
-                    <button className="btn btn-danger" style={{ padding: '4px 10px', marginRight: 4 }}
-                            onClick={() => setListingStatus(l.id, 'rejected')}>Reject</button>
-                    <button className="btn btn-outline" style={{ padding: '4px 10px' }}
-                            onClick={() => setListingStatus(l.id, 'sold')}>Sold</button>
-                  </td>
+                 <td style={{ padding: 8 }}>
+  {l.status === 'pending' && (
+    <>
+      <button className="btn" style={{ padding: '4px 10px', marginRight: 4 }} onClick={() => setListingStatus(l.id, 'active')}>Approve</button>
+      <button className="btn btn-danger" style={{ padding: '4px 10px' }} onClick={() => setListingStatus(l.id, 'rejected')}>Reject</button>
+    </>
+  )}
+
+  {l.status === 'active' && (
+    <>
+      <Link className="btn btn-outline" href={`/dashboard/listings/${l.id}`} style={{ padding: '4px 10px', marginRight: 4 }}>Edit</Link>
+      <button className="btn btn-outline" style={{ padding: '4px 10px', marginRight: 4 }} onClick={() => setListingStatus(l.id, 'sold')}>Mark Sold</button>
+      <button className="btn btn-danger" style={{ padding: '4px 10px' }} onClick={() => setListingStatus(l.id, 'rejected')}>Reject</Link>
+    </>
+  )}
+
+  {(l.status === 'sold' || l.status === 'rejected') && (
+    <button className="btn btn-outline" style={{ padding: '4px 10px' }} onClick={() => setListingStatus(l.id, 'active')}>Re-activate</button>
+  )}
+</td>
                 </tr>
               ))}
             </tbody>
