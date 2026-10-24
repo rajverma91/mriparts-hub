@@ -1,14 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic'; // ← THIS WAS MISSING
+import dynamic from 'next/dynamic';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
-
-// Import Quill styles
 import 'react-quill/dist/quill.snow.css';
 
-// Import ReactQuill dynamically to avoid SSR issues
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 export default function AdminPage() {
@@ -23,7 +20,10 @@ export default function AdminPage() {
     title: '', 
     content: '', 
     imageFile: null,
-    category: 'Industry News' 
+    category: 'Industry News',
+    seo_title: '',
+    seo_description: '',
+    tags: ''
   });
 
   async function load() {
@@ -72,6 +72,10 @@ export default function AdminPage() {
       formData.append('title', newsForm.title);
       formData.append('content', newsForm.content);
       formData.append('category', newsForm.category);
+      formData.append('seo_title', newsForm.seo_title);
+      formData.append('seo_description', newsForm.seo_description);
+      formData.append('tags', newsForm.tags);
+      
       if (newsForm.imageFile) {
         formData.append('image', newsForm.imageFile);
       }
@@ -86,7 +90,10 @@ export default function AdminPage() {
       if (!res.ok) throw new Error('Failed to create post');
 
       toast.success('News post created!', { id: toastId });
-      setNewsForm({ title: '', content: '', imageFile: null, category: 'Industry News' });
+      setNewsForm({ 
+        title: '', content: '', imageFile: null, 
+        category: 'Industry News', seo_title: '', seo_description: '', tags: '' 
+      });
     } catch (err) {
       toast.error(err.message, { id: toastId });
     }
@@ -255,6 +262,39 @@ export default function AdminPage() {
                 </select>
               </div>
 
+              {/* SEO Box (NEW) */}
+              <div className="card" style={{ padding: 20, marginBottom: 20 }}>
+                <h4 style={{ marginBottom: 16 }}>SEO Settings</h4>
+                <div className="form-row" style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 13 }}>SEO Title</label>
+                  <input 
+                    value={newsForm.seo_title} 
+                    onChange={(e) => setNewsForm({ ...newsForm, seo_title: e.target.value })}
+                    placeholder="Meta title tag"
+                    style={{ padding: 8 }}
+                  />
+                </div>
+                <div className="form-row" style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 13 }}>SEO Description</label>
+                  <textarea 
+                    value={newsForm.seo_description} 
+                    onChange={(e) => setNewsForm({ ...newsForm, seo_description: e.target.value })}
+                    placeholder="Meta description tag"
+                    rows={3}
+                    style={{ padding: 8, resize: 'vertical' }}
+                  />
+                </div>
+                <div className="form-row">
+                  <label style={{ fontSize: 13 }}>Tags</label>
+                  <input 
+                    value={newsForm.tags} 
+                    onChange={(e) => setNewsForm({ ...newsForm, tags: e.target.value })}
+                    placeholder="e.g. MRI, safety, parts"
+                    style={{ padding: 8 }}
+                  />
+                </div>
+              </div>
+
               {/* Featured Image Box */}
               <div className="card" style={{ padding: 20 }}>
                 <h4 style={{ marginBottom: 16 }}>Featured Image</h4>
@@ -264,9 +304,6 @@ export default function AdminPage() {
                   onChange={(e) => setNewsForm({ ...newsForm, imageFile: e.target.files[0] })}
                   style={{ padding: '8px 0', width: '100%' }} 
                 />
-                <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>
-                  Upload a cover image for the blog post.
-                </p>
               </div>
             </div>
           </form>

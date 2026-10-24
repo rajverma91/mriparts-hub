@@ -40,11 +40,12 @@ router.get('/:slug', async (req, res) => {
   }
 });
 
-// ADMIN: Create news (NOW ACCEPTS FILE UPLOAD)
 // ADMIN: Create news
 router.post('/', authRequired, adminRequired, upload.single('image'), async (req, res) => {
   try {
-    const { title, content, category } = req.body;
+    // ADDED: seo_title, seo_description, tags
+    const { title, content, category, seo_title, seo_description, tags } = req.body;
+    
     if (!title || !content) return res.status(400).json({ error: 'Title and content required' });
 
     let image_url = null;
@@ -61,10 +62,21 @@ router.post('/', authRequired, adminRequired, upload.single('image'), async (req
 
     const slug = `${slugify(title)}-${Date.now()}`;
     
-    // ADDED category TO THE INSERT
+    // ADDED: the new fields to the INSERT query
     const [result] = await pool.query(
-      'INSERT INTO news (title, slug, content, image_url, category) VALUES (?, ?, ?, ?, ?)',
-      [title, slug, content, image_url, category || 'Industry News']
+      `INSERT INTO news 
+       (title, slug, content, image_url, category, seo_title, seo_description, tags) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        title, 
+        slug, 
+        content, 
+        image_url, 
+        category || 'Industry News',
+        seo_title || null,
+        seo_description || null,
+        tags || null
+      ]
     );
     
     res.json({ id: result.insertId, slug, message: 'News created' });
