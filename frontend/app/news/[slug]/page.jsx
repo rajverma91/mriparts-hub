@@ -12,7 +12,11 @@ export default async function SingleNewsPage({ params }) {
     <div className="container" style={{ padding: '40px 20px', maxWidth: 800 }}>
       <Link href="/news" style={{ color: '#0d6efd', fontSize: 14 }}>← Back to all news</Link>
       
-      <h1 style={{ marginTop: 16, marginBottom: 8 }}>{post.title}</h1>
+      <div style={{ fontSize: 13, color: '#0d6efd', fontWeight: 600, marginTop: 16 }}>
+        {post.category}
+      </div>
+      <h1 style={{ marginTop: 8, marginBottom: 8 }}>{post.title}</h1>
+      
       <div style={{ color: '#6b7280', fontSize: 14, marginBottom: 24 }}>
         Published on {new Date(post.created_at).toLocaleDateString()} by {post.author}
       </div>
@@ -21,9 +25,12 @@ export default async function SingleNewsPage({ params }) {
         <img src={post.image_url} alt={post.title} style={{ width: '100%', borderRadius: 12, marginBottom: 24 }} />
       )}
 
-      <div style={{ lineHeight: 1.8, color: '#374151', whiteSpace: 'pre-line', fontSize: 16 }}>
-        {post.content}
-      </div>
-    </div> 
+      {/* RENDER HTML SAFELY */}
+      <div 
+        className="ql-editor" // Quill classes for list styles
+        style={{ padding: 0, lineHeight: 1.8, color: '#374151', fontSize: 16 }}
+        dangerouslySetInnerHTML={{ __html: post.content }} 
+      />
+    </div>
   );
 }

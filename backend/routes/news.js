@@ -41,14 +41,13 @@ router.get('/:slug', async (req, res) => {
 });
 
 // ADMIN: Create news (NOW ACCEPTS FILE UPLOAD)
+// ADMIN: Create news
 router.post('/', authRequired, adminRequired, upload.single('image'), async (req, res) => {
   try {
-    const { title, content } = req.body;
+    const { title, content, category } = req.body;
     if (!title || !content) return res.status(400).json({ error: 'Title and content required' });
 
     let image_url = null;
-
-    // If a file was uploaded, send to Cloudinary
     if (req.file) {
       const result = await new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
@@ -62,9 +61,10 @@ router.post('/', authRequired, adminRequired, upload.single('image'), async (req
 
     const slug = `${slugify(title)}-${Date.now()}`;
     
+    // ADDED category TO THE INSERT
     const [result] = await pool.query(
-      'INSERT INTO news (title, slug, content, image_url) VALUES (?, ?, ?, ?)',
-      [title, slug, content, image_url]
+      'INSERT INTO news (title, slug, content, image_url, category) VALUES (?, ?, ?, ?, ?)',
+      [title, slug, content, image_url, category || 'Industry News']
     );
     
     res.json({ id: result.insertId, slug, message: 'News created' });
