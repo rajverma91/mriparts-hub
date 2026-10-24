@@ -93,7 +93,7 @@ export default async function HomePage() {
 
       <section className="section container">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2>Ultrasound Machines</h2>
+          <h2>MRI Machines</h2>
           <Link href="/listings?category=ultrasound-machines" className="btn btn-outline" style={{ padding: '6px 14px' }}>View all</Link>
         </div>
         <div className="grid grid-4" style={{ marginTop: 16 }}>

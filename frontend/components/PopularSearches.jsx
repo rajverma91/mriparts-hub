@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 const SUGGESTED = [
-  'MRI Machines', 'CT Scanners', 'Ultrasound Machines', 'X-Ray Systems',
+  'MRI Machines', 'CT Scanners', 'X-Ray Systems',
   'Anesthesia Ventilators', 'Mammography Machines', 'Blood Gas Analyzers',
   'MRI Coils', 'Patient Monitors', 'Defibrillators',
   'Infusion Pumps', 'Surgical Microscopes',

@@ -64,7 +64,6 @@ CREATE TABLE IF NOT EXISTS listings (
 INSERT IGNORE INTO categories (name, slug) VALUES
 ('MRI Machines','mri-machines'),
 ('CT Scanners','ct-scanners'),
-('Ultrasound Machines','ultrasound-machines'),
 ('X-Ray Systems','x-ray-systems'),
 ('Anesthesia Ventilators','anesthesia-ventilators'),
 ('Mammography Machines','mammography-machines'),
