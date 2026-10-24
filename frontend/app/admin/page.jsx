@@ -12,7 +12,8 @@ export default function AdminPage() {
   const [tab,      setTab]      = useState('listings');
   
   // News Form State
-  const [newsForm, setNewsForm] = useState({ title: '', content: '', image_url: '' });
+ const [newsForm, setNewsForm] = useState({ title: '', content: '', imageFile: null });
+
 
   async function load() {
     try {
@@ -51,17 +52,39 @@ export default function AdminPage() {
     load();
   }
 
-  async function createNews(e) {
-    e.preventDefault();
-    const toastId = toast.loading('Publishing post...');
-    try {
-      await api.post('/news', newsForm);
-      toast.success('News post created!', { id: toastId });
-      setNewsForm({ title: '', content: '', image_url: '' });
-    } catch (err) {
-      toast.error(err.message, { id: toastId });
+async function createNews(e) {
+  e.preventDefault();
+  const toastId = toast.loading('Publishing post...');
+  
+  try {
+    const formData = new FormData();
+    formData.append('title', newsForm.title);
+    formData.append('content', newsForm.content);
+    if (newsForm.imageFile) {
+      formData.append('image', newsForm.imageFile);
     }
+
+    // We use fetch directly for FormData
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to create post');
+    }
+
+    toast.success('News post created!', { id: toastId });
+    setNewsForm({ title: '', content: '', imageFile: null });
+  } catch (err) {
+    toast.error(err.message, { id: toastId });
   }
+}
 
   if (!stats) return <div className="container" style={{ padding: 40 }}>Loading or unauthorized...</div>;
 
@@ -169,26 +192,34 @@ export default function AdminPage() {
       )}
 
       {/* NEWS TAB */}
-      {tab === 'news' && (
-        <div className="card" style={{ padding: 24, marginTop: 14 }}>
-          <h3 style={{ marginBottom: 16 }}>Create a News Post</h3>
-          <form onSubmit={createNews}>
-            <div className="form-row">
-              <label>Title</label>
-              <input required value={newsForm.title} onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} placeholder="e.g. Welcome to MRI Parts Hub" />
-            </div>
-            <div className="form-row">
-              <label>Image URL (Optional)</label>
-              <input value={newsForm.image_url} onChange={(e) => setNewsForm({ ...newsForm, image_url: e.target.value })} placeholder="https://..." />
-            </div>
-            <div className="form-row">
-              <label>Content</label>
-              <textarea required rows={6} value={newsForm.content} onChange={(e) => setNewsForm({ ...newsForm, content: e.target.value })} placeholder="Write your article here..." />
-            </div>
-            <button className="btn">Publish Post</button>
-          </form>
-        </div>
-      )}
+    {tab === 'news' && (
+  <div className="card" style={{ padding: 24, marginTop: 14 }}>
+    <h3 style={{ marginBottom: 16 }}>Create a News Post</h3>
+    <form onSubmit={createNews}>
+      <div className="form-row">
+        <label>Title</label>
+        <input required value={newsForm.title} onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} placeholder="e.g. Welcome to MRI Parts Hub" />
+      </div>
+      
+      {/* UPDATED: File Upload Input */}
+      <div className="form-row">
+        <label>Cover Image</label>
+        <input 
+          type="file" 
+          accept="image/*"
+          onChange={(e) => setNewsForm({ ...newsForm, imageFile: e.target.files[0] })}
+          style={{ padding: '8px 0' }} 
+        />
+      </div>
+
+      <div className="form-row">
+        <label>Content</label>
+        <textarea required rows={6} value={newsForm.content} onChange={(e) => setNewsForm({ ...newsForm, content: e.target.value })} placeholder="Write your article here..." />
+      </div>
+      <button className="btn">Publish Post</button>
+    </form>
+  </div>
+)}
     </div>
   );
 }

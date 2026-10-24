@@ -1,8 +1,19 @@
 const express = require('express');
 const pool = require('../config/db');
 const { authRequired, adminRequired } = require('../middleware/auth');
+const multer = require('multer');
+const { v2: cloudinary } = require('cloudinary');
+
+// Configure Cloudinary (Make sure this is configured in server.js or here)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 function slugify(s) {
   return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -18,7 +29,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// PUBLIC: Get single news post by slug
+// PUBLIC: Get single news post
 router.get('/:slug', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM news WHERE slug=?', [req.params.slug]);
@@ -29,17 +40,31 @@ router.get('/:slug', async (req, res) => {
   }
 });
 
-// ADMIN: Create news
-router.post('/', authRequired, adminRequired, async (req, res) => {
+// ADMIN: Create news (NOW ACCEPTS FILE UPLOAD)
+router.post('/', authRequired, adminRequired, upload.single('image'), async (req, res) => {
   try {
-    const { title, content, image_url } = req.body;
+    const { title, content } = req.body;
     if (!title || !content) return res.status(400).json({ error: 'Title and content required' });
+
+    let image_url = null;
+
+    // If a file was uploaded, send to Cloudinary
+    if (req.file) {
+      const result = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: 'mriparts_news' },
+          (error, res) => (error ? reject(error) : resolve(res))
+        );
+        uploadStream.end(req.file.buffer);
+      });
+      image_url = result.secure_url;
+    }
 
     const slug = `${slugify(title)}-${Date.now()}`;
     
     const [result] = await pool.query(
       'INSERT INTO news (title, slug, content, image_url) VALUES (?, ?, ?, ?)',
-      [title, slug, content, image_url || null]
+      [title, slug, content, image_url]
     );
     
     res.json({ id: result.insertId, slug, message: 'News created' });
