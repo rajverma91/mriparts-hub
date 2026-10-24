@@ -1,9 +1,16 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic'; // ← THIS WAS MISSING
 import { api } from '@/lib/api';
-import toast from 'react-hot-toast'; // ← Added this
+import toast from 'react-hot-toast';
+
+// Import Quill styles
 import 'react-quill/dist/quill.snow.css';
+
+// Import ReactQuill dynamically to avoid SSR issues
+const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
+
 export default function AdminPage() {
   const [stats,    setStats]    = useState(null);
   const [listings, setListings] = useState([]);
@@ -12,13 +19,12 @@ export default function AdminPage() {
   const [tab,      setTab]      = useState('listings');
   
   // News Form State
-const [newsForm, setNewsForm] = useState({ 
-  title: '', 
-  content: '', 
-  imageFile: null,
-  category: 'Industry News' // Added Category
-});
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
+  const [newsForm, setNewsForm] = useState({ 
+    title: '', 
+    content: '', 
+    imageFile: null,
+    category: 'Industry News' 
+  });
 
   async function load() {
     try {
@@ -57,34 +63,34 @@ const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
     load();
   }
 
-async function createNews(e) {
-  e.preventDefault();
-  const toastId = toast.loading('Publishing post...');
-  
-  try {
-    const formData = new FormData();
-    formData.append('title', newsForm.title);
-    formData.append('content', newsForm.content);
-    formData.append('category', newsForm.category);
-    if (newsForm.imageFile) {
-      formData.append('image', newsForm.imageFile);
+  async function createNews(e) {
+    e.preventDefault();
+    const toastId = toast.loading('Publishing post...');
+    
+    try {
+      const formData = new FormData();
+      formData.append('title', newsForm.title);
+      formData.append('content', newsForm.content);
+      formData.append('category', newsForm.category);
+      if (newsForm.imageFile) {
+        formData.append('image', newsForm.imageFile);
+      }
+
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+
+      if (!res.ok) throw new Error('Failed to create post');
+
+      toast.success('News post created!', { id: toastId });
+      setNewsForm({ title: '', content: '', imageFile: null, category: 'Industry News' });
+    } catch (err) {
+      toast.error(err.message, { id: toastId });
     }
-
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData
-    });
-
-    if (!res.ok) throw new Error('Failed to create post');
-
-    toast.success('News post created!', { id: toastId });
-    setNewsForm({ title: '', content: '', imageFile: null, category: 'Industry News' });
-  } catch (err) {
-    toast.error(err.message, { id: toastId });
   }
-}
 
   if (!stats) return <div className="container" style={{ padding: 40 }}>Loading or unauthorized...</div>;
 
@@ -110,7 +116,6 @@ async function createNews(e) {
           Reviews {pendingReviews > 0 && <span style={{ background: '#dc3545', color: '#fff', borderRadius: 999, padding: '1px 7px', fontSize: 11, marginLeft: 4 }}>{pendingReviews}</span>}
         </button>
         <button className={`btn ${tab !== 'users' ? 'btn-outline' : ''}`} onClick={() => setTab('users')}>Users</button>
-        {/* New News Tab */}
         <button className={`btn ${tab !== 'news' ? 'btn-outline' : ''}`} onClick={() => setTab('news')}>News / Blog</button>
       </div>
 
@@ -192,81 +197,81 @@ async function createNews(e) {
       )}
 
       {/* NEWS TAB */}
-    {tab === 'news' && (
-  <div className="card" style={{ padding: 24, marginTop: 14 }}>
-    <h3 style={{ marginBottom: 20 }}>Add New Post</h3>
-    
-    <form onSubmit={createNews} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 30 }}>
-      
-      {/* LEFT COLUMN: Main Editor */}
-      <div>
-        <div className="form-row" style={{ marginBottom: 20 }}>
-          <input 
-            required 
-            value={newsForm.title} 
-            onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} 
-            placeholder="Enter post title here..." 
-            style={{ fontSize: 24, padding: 12, fontWeight: 600 }}
-          />
-        </div>
+      {tab === 'news' && (
+        <div className="card" style={{ padding: 24, marginTop: 14 }}>
+          <h3 style={{ marginBottom: 20 }}>Add New Post</h3>
+          
+          <form onSubmit={createNews} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 30 }}>
+            
+            {/* LEFT COLUMN: Main Editor */}
+            <div>
+              <div className="form-row" style={{ marginBottom: 20 }}>
+                <input 
+                  required 
+                  value={newsForm.title} 
+                  onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} 
+                  placeholder="Enter post title here..." 
+                  style={{ fontSize: 24, padding: 12, fontWeight: 600 }}
+                />
+              </div>
 
-        {/* Rich Text Editor */}
-        <div className="form-row">
-          <label>Post Content</label>
-          <div style={{ background: '#fff', minHeight: 400, marginBottom: 50 }}>
-            <ReactQuill 
-              theme="snow" 
-              value={newsForm.content} 
-              onChange={(content) => setNewsForm({ ...newsForm, content })}
-              style={{ height: 350 }}
-            />
-          </div>
-        </div>
-      </div>
+              {/* Rich Text Editor */}
+              <div className="form-row">
+                <label>Post Content</label>
+                <div style={{ background: '#fff', minHeight: 400, marginBottom: 50 }}>
+                  <ReactQuill 
+                    theme="snow" 
+                    value={newsForm.content} 
+                    onChange={(content) => setNewsForm({ ...newsForm, content })}
+                    style={{ height: 350 }}
+                  />
+                </div>
+              </div>
+            </div>
 
-      {/* RIGHT COLUMN: Sidebar */}
-      <div>
-        {/* Publish Box */}
-        <div className="card" style={{ padding: 20, marginBottom: 20, background: '#f8fafc' }}>
-          <h4 style={{ marginBottom: 16 }}>Publish</h4>
-          <button className="btn" type="submit" style={{ width: '100%' }}>Publish Post</button>
-        </div>
+            {/* RIGHT COLUMN: Sidebar */}
+            <div>
+              {/* Publish Box */}
+              <div className="card" style={{ padding: 20, marginBottom: 20, background: '#f8fafc' }}>
+                <h4 style={{ marginBottom: 16 }}>Publish</h4>
+                <button className="btn" type="submit" style={{ width: '100%' }}>Publish Post</button>
+              </div>
 
-        {/* Categories Box */}
-        <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-          <h4 style={{ marginBottom: 16 }}>Category</h4>
-          <select 
-            value={newsForm.category} 
-            onChange={(e) => setNewsForm({ ...newsForm, category: e.target.value })}
-            style={{ width: '100%', padding: 10 }}
-          >
-            <option value="Industry News">Industry News</option>
-            <option value="MRI Parts">MRI Parts</option>
-            <option value="CT Parts">CT Parts</option>
-            <option value="MRI Safety">MRI Safety</option>
-            <option value="Repairs & Maintenance">Repairs & Maintenance</option>
-            <option value="Equipment Leasing">Equipment Leasing</option>
-            <option value="Accessories">Accessories</option>
-          </select>
-        </div>
+              {/* Categories Box */}
+              <div className="card" style={{ padding: 20, marginBottom: 20 }}>
+                <h4 style={{ marginBottom: 16 }}>Category</h4>
+                <select 
+                  value={newsForm.category} 
+                  onChange={(e) => setNewsForm({ ...newsForm, category: e.target.value })}
+                  style={{ width: '100%', padding: 10 }}
+                >
+                  <option value="Industry News">Industry News</option>
+                  <option value="MRI Parts">MRI Parts</option>
+                  <option value="CT Parts">CT Parts</option>
+                  <option value="MRI Safety">MRI Safety</option>
+                  <option value="Repairs & Maintenance">Repairs & Maintenance</option>
+                  <option value="Equipment Leasing">Equipment Leasing</option>
+                  <option value="Accessories">Accessories</option>
+                </select>
+              </div>
 
-        {/* Featured Image Box */}
-        <div className="card" style={{ padding: 20 }}>
-          <h4 style={{ marginBottom: 16 }}>Featured Image</h4>
-          <input 
-            type="file" 
-            accept="image/*"
-            onChange={(e) => setNewsForm({ ...newsForm, imageFile: e.target.files[0] })}
-            style={{ padding: '8px 0', width: '100%' }} 
-          />
-          <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>
-            Upload a cover image for the blog post.
-          </p>
+              {/* Featured Image Box */}
+              <div className="card" style={{ padding: 20 }}>
+                <h4 style={{ marginBottom: 16 }}>Featured Image</h4>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={(e) => setNewsForm({ ...newsForm, imageFile: e.target.files[0] })}
+                  style={{ padding: '8px 0', width: '100%' }} 
+                />
+                <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>
+                  Upload a cover image for the blog post.
+                </p>
+              </div>
+            </div>
+          </form>
         </div>
-      </div>
-    </form>
-  </div>
-)}
+      )}
     </div>
   );
 }
