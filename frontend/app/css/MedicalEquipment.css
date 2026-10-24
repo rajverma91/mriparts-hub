@@ -1,136 +1,100 @@
+/* MedicalEquipment.css */
 
 .medical-equipment {
-  width: 100%;
-  min-height: 258px;
-  box-sizing: border-box;
-  padding: 65px 24px 40px;
-  background: #fafafa;
-  font-family: Arial, Helvetica, sans-serif;
+  padding: 60px 20px;
+  background: #ffffff;
+  text-align: center;
 }
 
-.medical-equipment h1 {
-  margin: 0 0 38px;
-  text-align: center;
-  color: #4b5988;
-  font-size: 48px;
-  line-height: 1.2;
-  font-weight: 400;
-  letter-spacing: -1.2px;
+.medical-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 40px;
+  letter-spacing: -0.5px;
 }
 
 .medical-features {
-  width: 100%;
-  max-width: 1155px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .medical-feature {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
+  justify-content: flex-start;
+  gap: 16px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+  cursor: default;
 }
 
-.medical-icon {
+.medical-feature:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);
+  border-color: #0d6efd;
+  background: #ffffff;
+}
+
+.medical-icon-wrapper {
+  flex-shrink: 0;
   width: 48px;
   height: 48px;
-  flex: 0 0 48px;
+  background: #e0f2fe; /* Light blue background */
+  color: #0d6efd; /* Blue icon */
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #9fc4f7;
+  transition: all 0.3s ease;
 }
 
-.medical-icon svg {
-  display: block;
-  width: 100%;
-  height: 100%;
+.medical-feature:hover .medical-icon-wrapper {
+  background: #0d6efd;
+  color: #ffffff;
 }
 
-.medical-feature p {
-  margin: 0;
-  color: #555;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 24px;
-  white-space: nowrap;
+.medical-icon {
+  width: 24px;
+  height: 24px;
 }
 
-.medical-feature strong {
-  color: #383838;
+.medical-text {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.medical-text strong {
+  color: #1e293b;
   font-weight: 700;
 }
 
-/* Laptop and tablet */
-@media (max-width: 1100px) {
-  .medical-equipment {
-    padding-top: 45px;
-  }
-
-  .medical-equipment h1 {
-    font-size: 40px;
-    margin-bottom: 32px;
-  }
-
+/* Responsive Design */
+@media (max-width: 1024px) {
   .medical-features {
-    max-width: 850px;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 28px 35px;
-  }
-
-  .medical-feature p {
-    font-size: 14px;
-    line-height: 21px;
-  }
-
-  .medical-icon {
-    width: 42px;
-    height: 42px;
-    flex-basis: 42px;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* Mobile */
-@media (max-width: 600px) {
-  .medical-equipment {
-    min-height: auto;
-    padding: 32px 20px;
-  }
-
-  .medical-equipment h1 {
-    font-size: 30px;
-    line-height: 1.25;
-    letter-spacing: -0.5px;
-    margin-bottom: 30px;
-  }
-
+@media (max-width: 640px) {
   .medical-features {
-    width: fit-content;
-    max-width: 100%;
-    margin: 0 auto;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 22px;
+    grid-template-columns: 1fr;
   }
-
-  .medical-feature {
-    gap: 12px;
+  
+  .hide-mobile {
+    display: none;
   }
-
-  .medical-feature p {
-    font-size: 13px;
-    line-height: 20px;
-    white-space: normal;
-  }
-
-  .medical-icon {
-    width: 40px;
-    height: 40px;
-    flex-basis: 40px;
+  
+  .medical-title {
+    font-size: 26px;
   }
 }

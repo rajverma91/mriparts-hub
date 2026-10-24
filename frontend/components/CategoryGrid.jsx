@@ -1,11 +1,9 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-// Curated dropdown items — top of the list shows real, well-defined categories.
-// Feel free to extend or reorder.
 const GROUPS = [
   { key: 'anesthesia', label: 'Anesthesia Equipment/ICU' },
   { key: 'cardiology', label: 'Cardiology Equipment' },
@@ -37,9 +35,10 @@ const GROUPS = [
 
 export default function CategoryGrid() {
   const [openKey, setOpenKey] = useState(null);
-  const [subs, setSubs]       = useState({});
+  const [subs, setSubs] = useState({});
   const [categories, setCategories] = useState([]);
   const router = useRouter();
+  const gridRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -48,23 +47,27 @@ export default function CategoryGrid() {
         if (r.ok) setCategories(await r.json());
       } catch {}
     })();
+
+    // Close dropdown if clicking outside
+    function handleClickOutside(event) {
+      if (gridRef.current && !gridRef.current.contains(event.target)) {
+        setOpenKey(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // For each dropdown, we'll show: real categories first, then curated subcategories.
-  // In a real app you'd fetch real subcategories per parent; here we synthesize
-  // a list of brands + a few common terms so it feels populated.
   async function openGroup(group) {
     setOpenKey(group.key === openKey ? null : group.key);
 
-    if (subs[group.key]) return; // already loaded
+    if (subs[group.key]) return;
 
     try {
-      const [brandsRes] = await Promise.all([
-        fetch(`${API}/brands`).then((r) => r.ok ? r.json() : [])
-      ]);
+      const brandsRes = await fetch(`${API}/brands`).then((r) => (r.ok ? r.json() : []));
       const items = [
         ...categories.map((c) => ({ type: 'category', label: c.name, href: `/listings?category=${c.slug}` })),
-        ...brandsRes.map((b) => ({ type: 'brand', label: b.name, href: `/listings?brand=${encodeURIComponent(b.name)}` }))
+        ...brandsRes.map((b) => ({ type: 'brand', label: b.name, href: `/listings?brand=${encodeURIComponent(b.name)}` })),
       ];
       setSubs((s) => ({ ...s, [group.key]: items.slice(0, 12) }));
     } catch {
@@ -73,38 +76,38 @@ export default function CategoryGrid() {
   }
 
   return (
-    <div className="cat-grid">
+    <div className="modern-cat-grid" ref={gridRef}>
       {GROUPS.map((g) => {
         const isOpen = openKey === g.key;
-        const items  = subs[g.key] || [];
+        const items = subs[g.key] || [];
 
         return (
-          <div key={g.key} className={`cat-cell ${isOpen ? 'open' : ''}`}>
-            <button
-              type="button"
-              className="cat-btn"
-              onClick={() => openGroup(g)}
-            >
-              <span>{g.label}</span>
-              <span className="cat-caret">{isOpen ? '▴' : '▾'}</span>
+          <div key={g.key} className={`modern-cat-cell ${isOpen ? 'open' : ''}`}>
+            <button type="button" className="modern-cat-btn" onClick={() => openGroup(g)}>
+              <span className="modern-cat-label">{g.label}</span>
+              <svg 
+                className={`modern-cat-icon ${isOpen ? 'rotate' : ''}`} 
+                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
             </button>
 
             {isOpen && (
-              <div className="cat-dropdown">
-                {items.length === 0 && (
-                  <div className="cat-empty">Loading…</div>
-                )}
+              <div className="modern-cat-dropdown">
+                {items.length === 0 && <div className="modern-cat-loading">Loading...</div>}
                 {items.map((it, i) => (
                   <a
                     key={i}
                     href={it.href}
-                    className="cat-item"
+                    className="modern-cat-item"
                     onClick={(e) => {
                       e.preventDefault();
                       router.push(it.href);
                       setOpenKey(null);
                     }}
                   >
+                    <span className="modern-cat-dot"></span>
                     {it.label}
                   </a>
                 ))}

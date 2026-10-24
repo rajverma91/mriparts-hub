@@ -18,6 +18,31 @@ async function getListings(params = '') {
   }
 }
 
+// Reusable component for listing sections
+function ListingSection({ title, subtitle, link, items, bg = '#fff' }) {
+  if (!items || items.length === 0) return null;
+
+  return (
+    <section style={{ background: bg, padding: '60px 0' }}>
+      <div className="container">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
+          <div>
+            <h2 style={{ fontSize: 24, fontWeight: 800, color: '#1e293b', margin: 0 }}>{title}</h2>
+            {subtitle && <p style={{ color: '#6b7280', marginTop: 6, fontSize: 15 }}>{subtitle}</p>}
+          </div>
+          <Link href={link} className="btn btn-outline" style={{ padding: '8px 20px', borderRadius: 8, fontSize: 14 }}>
+            View All →
+          </Link>
+        </div>
+        
+        <div className="grid grid-4">
+          {items.map((item) => <ListingCard key={item.id} item={item} />)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default async function HomePage() {
   const [latest, mri, ct, us] = await Promise.all([
     getListings('limit=8'),
@@ -34,82 +59,81 @@ export default async function HomePage() {
 
   return (
     <>
-    <MedicalEquipment />
-        <section className="hero">
+      <MedicalEquipment />
+
+      {/* HERO SECTION */}
+      <section style={{ 
+        background: 'linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%)', 
+        padding: '60px 20px', 
+        textAlign: 'center',
+        color: '#fff'
+      }}>
         <div className="container">
-          <h1>WHAT ARE YOU LOOKING FOR?</h1>
-          <SearchBar />
+          <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 24, letterSpacing: '-0.5px' }}>
+            WHAT ARE YOU LOOKING FOR?
+          </h1>
+          <div style={{ maxWidth: 800, margin: '0 auto' }}>
+            <SearchBar />
+          </div>
         </div>
       </section>
 
-      {/* <div className="container">
-        <div className="trust">
-          <div>Free Delivery from $50</div>
-          <div>99% Positive Feedbacks</div>
-          <div>365 days free return</div>
-          <div>Payment Secure System</div>
-          <div>Only Best Brands</div>
+      {/* CATEGORY GRID */}
+      <section style={{ padding: '60px 0', background: '#f8fafc' }}>
+        <div className="container">
+          <CategoryGrid />
         </div>
-      </div> */}
- <section className="section container">
-        <CategoryGrid />
       </section>
+
       <AuctionBanner />
+
+      {/* FEATURED LISTINGS */}
       {featuredItems.length > 0 && (
-        <section className="section container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 24 }}>⭐</span> Featured listings
-            </h2>
-            <Link href="/listings?sort=newest" className="btn btn-outline" style={{ padding: '6px 14px' }}>
-              View all
-            </Link>
-          </div>
-          <div className="grid grid-4" style={{ marginTop: 16 }}>
-            {featuredItems.map((i) => <ListingCard key={i.id} item={i} />)}
-          </div>
-        </section>
+        <ListingSection 
+          title="⭐ Featured Listings" 
+          subtitle="Premium equipment from verified sellers"
+          link="/listings?sort=newest" 
+          items={featuredItems}
+          bg="#fff" 
+        />
       )}
 
-      <section className="section container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2>Featured MRI Machines</h2>
-          <Link href="/listings?category=mri-machines" className="btn btn-outline" style={{ padding: '6px 14px' }}>View all</Link>
-        </div>
-        <div className="grid grid-4" style={{ marginTop: 16 }}>
-          {mri.data?.length ? mri.data.map((i) => <ListingCard key={i.id} item={i} />) : <p>No listings yet.</p>}
-        </div>
-      </section>
+      {/* MRI MACHINES */}
+      <ListingSection 
+        title="MRI Machines" 
+        subtitle="High-field and low-field scanners from top brands"
+        link="/listings?category=mri-machines" 
+        items={mri.data || []}
+        bg="#f8fafc" 
+      />
 
-      <section className="section container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2>CT Scanners</h2>
-          <Link href="/listings?category=ct-scanners" className="btn btn-outline" style={{ padding: '6px 14px' }}>View all</Link>
-        </div>
-        <div className="grid grid-4" style={{ marginTop: 16 }}>
-          {ct.data?.length ? ct.data.map((i) => <ListingCard key={i.id} item={i} />) : <p>No listings yet.</p>}
-        </div>
-      </section>
+      {/* CT SCANNERS */}
+      <ListingSection 
+        title="CT Scanners" 
+        subtitle="Multi-slice and cone-beam CT systems"
+        link="/listings?category=ct-scanners" 
+        items={ct.data || []}
+        bg="#fff" 
+      />
 
-      <section className="section container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2>MRI Machines</h2>
-          <Link href="/listings?category=ultrasound-machines" className="btn btn-outline" style={{ padding: '6px 14px' }}>View all</Link>
-        </div>
-        <div className="grid grid-4" style={{ marginTop: 16 }}>
-          {us.data?.length ? us.data.map((i) => <ListingCard key={i.id} item={i} />) : <p>No listings yet.</p>}
-        </div>
-      </section>
+      {/* ULTRASOUND */}
+      <ListingSection 
+        title="Ultrasound Machines" 
+        subtitle="Cart-based and portable ultrasound systems"
+        link="/listings?category=ultrasound-machines" 
+        items={us.data || []}
+        bg="#f8fafc" 
+      />
 
-      <section className="section container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2>Latest Listings</h2>
-          <Link href="/listings" className="btn btn-outline" style={{ padding: '6px 14px' }}>View all</Link>
-        </div>
-        <div className="grid grid-4" style={{ marginTop: 16 }}>
-          {latest.data?.length ? latest.data.map((i) => <ListingCard key={i.id} item={i} />) : <p>No listings yet. Be the first seller!</p>}
-        </div>
-      </section>
+      {/* LATEST LISTINGS */}
+      <ListingSection 
+        title="Latest Listings" 
+        subtitle="Freshly posted equipment from sellers worldwide"
+        link="/listings" 
+        items={latest.data || []}
+        bg="#fff" 
+      />
+
       <WhatIsBimedis />
     </>
   );
