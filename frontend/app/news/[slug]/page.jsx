@@ -20,7 +20,7 @@ export default async function SingleNewsPage({ params }) {
       <div style={{ color: '#6b7280', fontSize: 14, marginBottom: 24 }}>
         Published on {new Date(post.created_at).toLocaleDateString()} by {post.author}
       </div>
-
+ 
       {post.image_url && (
         <img src={post.image_url} alt={post.title} style={{ width: '100%', borderRadius: 12, marginBottom: 24 }} />
       )}
