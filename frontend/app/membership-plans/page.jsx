@@ -75,7 +75,7 @@ export default function ProAccountPage() {
   return (
     <div className="container" style={{ padding: '40px 20px', maxWidth: 1080 }}>
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <h1 style={{ marginBottom: 8 }}>Pro accounts</h1>
+        <h1 style={{ marginBottom: 8 }}>Membership Plans</h1>
         <p style={{ color: '#6b7280', fontSize: 17 }}>
           Grow your medical equipment business with premium placement.
         </p>

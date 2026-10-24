@@ -1,14 +1,14 @@
 import Link from 'next/link';
 
 const SERVICES = [
-  { title: 'Installation & Setup', desc: 'On-site installation and calibration of imaging equipment.' },
-  { title: 'Preventive Maintenance', desc: 'Scheduled service contracts to keep machines running.' },
-  { title: 'Repair & Diagnostics', desc: 'Troubleshooting, part replacement, and system diagnostics.' },
-  { title: 'Refurbishment', desc: 'Full refurbishing of used equipment to like-new condition.' },
-  { title: 'Training', desc: 'Operator and technician training on new systems.' },
-  { title: 'Decommissioning', desc: 'Safe removal and disposal of outdated equipment.' },
-  { title: 'Transport & Logistics', desc: 'Specialised crating, freight, and installation logistics.' },
-  { title: 'Consulting', desc: 'Equipment selection, procurement, and lifecycle planning.' },
+  { title: 'MRI Part Repair', desc: 'On-site installation and calibration of imaging equipment.' },
+  { title: 'MRI Deinstall & Install', desc: 'Scheduled service contracts to keep machines running.' },
+  { title: 'MRI Rental', desc: 'Troubleshooting, part replacement, and system diagnostics.' },
+  // { title: 'Refurbishment', desc: 'Full refurbishing of used equipment to like-new condition.' },
+  // { title: 'Training', desc: 'Operator and technician training on new systems.' },
+  // { title: 'Decommissioning', desc: 'Safe removal and disposal of outdated equipment.' },
+  // { title: 'Transport & Logistics', desc: 'Specialised crating, freight, and installation logistics.' },
+  // { title: 'Consulting', desc: 'Equipment selection, procurement, and lifecycle planning.' },
 ];
 
 export default function ServicesPage() {

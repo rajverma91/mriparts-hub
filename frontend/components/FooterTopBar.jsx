@@ -2,16 +2,19 @@
 import Link from 'next/link';
 
 const LINKS = [
-  { href: '/stats',           label: 'Statistics' },
-  { href: '/agreements',      label: 'User Agreement' },
-  { href: '/faq',             label: "FAQ's" },
-  { href: '/documentation',   label: "Documentation" },
-  { href: '/sitemap',         label: 'Sitemap' },
-  { href: '/about',           label: 'About Us' },
-  { href: '/contacts',        label: 'Contacts' },
-  { href: '/news',            label: 'News' },
-  { href: '/partnership',     label: 'Service Partnership' },
-  { href: '/sellers/register',label: 'Become a Partner' },
+   { href: '/about',           label: 'About Us' },
+   { href: '/contacts',        label: 'Contacts' },
+    { href: '/faq',             label: "FAQ's" },
+     { href: '/news',            label: 'News/ Blogs' },
+     { href: '/upcoming-events',            label: 'Upcoming Events' },
+     { href: '/privacy-policy',            label: 'Privacy Policy' },
+
+  // { href: '/stats',           label: 'Statistics' },
+  // { href: '/agreements',      label: 'User Agreement' },
+  // { href: '/documentation',   label: "Documentation" },
+  // { href: '/sitemap',         label: 'Sitemap' },
+  // { href: '/partnership',     label: 'Service Partnership' },
+  // { href: '/sellers/register',label: 'Become a Partner' },
 ];
 
 export default function FooterTopBar() {
