@@ -54,17 +54,17 @@ const PlatformIcon = () => (
 export default function MedicalEquipment() {
   return (
     <section className="medical-equipment">
-      <h1>New &amp; Used Medical Equipment</h1>
+      <h1>New & Used Medical Equipment and Accessories</h1>
 
       <div className="medical-features">
         <div className="medical-feature">
           <span className="medical-icon">
             <VerifiedIcon />
           </span>
-          <p>
-            <strong>Reliable</strong> and <strong>verified</strong>
+          <p> 
+            <strong>Trusted</strong> Marketplace for 
             <br />
-            sellers of <strong>BiMedis</strong>
+           <strong>MRI & CT Parts</strong>
           </p>
         </div>
 

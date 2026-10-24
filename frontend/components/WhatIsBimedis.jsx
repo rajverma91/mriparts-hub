@@ -11,26 +11,28 @@ const WhatIsBimedis = () => {
         <div className={styles.textColumn}>
           
           {/* Section 1: What is Bimedis? */}
-          <h2 className={styles.mainHeading}>What is Bimedis?</h2>
+          <h2 className={styles.mainHeading}>About MRI Parts Hub</h2>
           
           <p className={styles.paragraph}>
-            <strong>Bimedis</strong> is a <strong>Medical</strong> and <strong>Hospital Equipment Marketplace</strong> for <strong>New</strong> and <strong>Used</strong> Medical Equipment for sale or <strong>Refurbished</strong> Medical Equipment. We also offer Medical Equipment related <strong>Services</strong> Directory. You can <strong>Buy</strong> & <strong>Sell</strong> <strong>New</strong> and <strong>Pre-Owned</strong> Medical <strong>Equipment</strong> and Medical <strong>Products</strong>.
+            MRI Parts Hub is an online marketplace for buying and selling new, used, and refurbished MRI and CT equipment, parts, and accessories, as well as MRI safety products and medical imaging services.** We connect healthcare facilities, imaging centers, medical equipment suppliers, service providers, and industry professionals through a convenient platform dedicated to the medical imaging industry.
           </p>
 
           <p className={styles.paragraph}>
-            <strong>Bimedis</strong> provides more than, <strong>390 000 Offers</strong>. You can find the 2nd hand medical <strong>equipment</strong>, Medical Device <strong>Companies</strong>, Home Medical <strong>Devices</strong>, Hospital Medical Equipment, Hospital <strong>Instruments</strong> and more Medical Equipment. List your Hospital Equipment and Medical Equipment for <strong>sale</strong> or <strong>wanted</strong>.
+           Whether you are looking for MRI or CT replacement parts, equipment accessories, pre-owned imaging equipment, MRI safety products, MRI parts repair services, or equipment leasing options, MRI Parts Hub makes it easier to find the products and services you need.
           </p>
 
           <p className={styles.paragraph}>
-            <strong>Bimedis</strong> is a classified ads platform popular with many doctors. A convenient ad search system is provided to ensure quick access to necessary Medical Instrument, that’s why it has become even easier to <strong>Buy Cheap Used</strong> Medical Equipment. The search results list provides the possibility to select the merchandise category, manufacturer name, machine model, and its manufacturing date. Besides, it also allows setting the price range, specifying equipment condition and the supplier’s country of origin.
+            Our marketplace allows buyers to explore listings by product category, manufacturer, model, equipment condition, price, and other relevant specifications. Users can also find MRI parts repair providers, explore leasing services, and connect with suppliers and service professionals. Sellers and service providers can list their available inventory and services to reach potential customers across the medical imaging industry.
+          </p>
+          <p className={styles.paragraph}>
+           From MRI and CT parts to essential accessories, MRI safety solutions, repair services, and leasing options,<strong>*MRI Parts Hub brings medical imaging products, services, and industry professionals together in one convenient marketplace.*</strong> 
+          </p>
+          <p className={styles.paragraph}>
+           MRI Parts Hub — Your Marketplace for MRI & CT Parts, Accessories, Equipment, Repairs, Leasing, and MRI Safety Products.
           </p>
 
           {/* Section 2: Our advantages */}
-          <h2 className={styles.subHeading}>Our advantages</h2>
-          
-          <p className={styles.paragraph}>
-            As a <strong>B2B</strong> manufacturer or supplier you want to be sure your company has an online visibility and a strong reputation. Bimedis <strong>B2B</strong> Advertising Solutions will help you to promote your products and your brand position in <strong>B2B</strong> medical marketplace globally with <strong>2M</strong> unique visitors per year, it is more than <strong>MEDICA</strong> Trade Fair Düsseldorf visits at <strong>16x</strong>.
-          </p>
+        
 
         </div>
 
@@ -48,6 +50,22 @@ const WhatIsBimedis = () => {
         </div>
 
       </div>
+      <div className='fullSectionWrap'>
+         <h2 className={styles.subHeading}>Our Advantages</h2>
+          
+          <p className={styles.paragraph}>
+            As a <strong>*B2B and B2C manufacturer, supplier, or service provider, you want to increase your online visibility, build a strong brand reputation, and reach the right customers. **MRI Parts Hub*</strong> provides a dedicated marketplace to help you promote your products and services, connect with potential buyers, and expand your reach across the medical imaging industry. 
+          </p>
+          <p className={styles.paragraph}>
+          Whether you manufacture, supply, repair, or lease MRI and CT equipment, parts, and accessories, or offer MRI safety products and related services, MRI Parts Hub helps you showcase your offerings to healthcare facilities, hospitals, imaging centers, medical equipment dealers, service companies, and individual buyers.
+          </p>
+          <p className={styles.paragraph}>
+          Our platform supports both <strong>*business-to-business (B2B) and business-to-consumer (B2C)* </strong>opportunities, helping manufacturers and suppliers increase product exposure, generate business inquiries, connect with customers, and discover new growth opportunities in the MRI and CT marketplace.
+          </p>
+          <p className={styles.paragraph}>
+          MRI Parts Hub — Helping Medical Imaging Businesses Connect, Promote, and Grow.
+          </p>
+</div>
     </section>
   );
 };

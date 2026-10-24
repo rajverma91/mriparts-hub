@@ -146,7 +146,10 @@ input, select, textarea {
   gap: 18px;
   flex-wrap: wrap;
 }
-
+.fullSectionWrap {
+    width: 1200px;
+    margin: 31px auto 0;
+}
 /* Language / Currency pill */
 .hdr-select {
   background: transparent;
