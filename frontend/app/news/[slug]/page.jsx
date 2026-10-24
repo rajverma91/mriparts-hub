@@ -24,6 +24,6 @@ export default async function SingleNewsPage({ params }) {
       <div style={{ lineHeight: 1.8, color: '#374151', whiteSpace: 'pre-line', fontSize: 16 }}>
         {post.content}
       </div>
-    </div>
+    </div> 
   );
 }
