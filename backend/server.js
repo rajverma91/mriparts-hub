@@ -15,6 +15,7 @@ const sellerRoutes   = require('./routes/sellers');
 const favoriteRoutes = require('./routes/favorites');
 const paymentRoutes  = require('./routes/payments');
 const searchRoutes   = require('./routes/search');
+const newsRoutes = require('./routes/news');
 
 const app = express();
 
@@ -62,6 +63,7 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/payments',  paymentRoutes);
 app.use('/api',           categoryRoutes);
 app.use('/api/admin',     adminRoutes);
+app.use('/api/news', newsRoutes);
 
 app.get('/', (_, res) => res.json({ ok: true, service: 'MRI Parts Hub API' }));
 
