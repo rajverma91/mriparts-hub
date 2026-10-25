@@ -574,6 +574,52 @@ input, select, textarea {
 .hero {
  padding: 60px 20px;
 }
+/* ─────── TOP NAV DROPDOWNS ─────── */
+.nav-item-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.hdr-nav-link {
+  /* Keep your existing styles */
+  display: flex;
+  align-items: center;
+}
+
+.nav-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  min-width: 220px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
+  border-radius: 0 0 8px 8px;
+  padding: 8px 0;
+  z-index: 100;
+  animation: fadeIn 0.15s ease-in-out;
+}
+
+.nav-dropdown-item {
+  display: block;
+  padding: 10px 20px;
+  font-size: 14px;
+  color: #374151;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.nav-dropdown-item:hover {
+  background: #f3f4f6;
+  color: #0d6efd;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .hero h1 {
     margin: 0 0 38px;
     text-align: center;

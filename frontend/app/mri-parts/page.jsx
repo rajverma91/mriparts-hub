@@ -1,32 +1,24 @@
 import Link from 'next/link';
-import ListingCard from '@/components/ListingCard';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-export default async function PartsPage() {
-  const res = await fetch(`${API}/listings?category=mri-parts-accessories&limit=24`, { cache: 'no-store' });
-  const data = res.ok ? await res.json() : { data: [] };
-  const rows = data.data || [];
+export default function MriPartsPage() {
+  const parts = [
+    { name: 'MRI Coils', slug: 'mri-coils' },
+    { name: 'Gradients', slug: 'gradients' },
+    { name: 'RF Amplifiers', slug: 'rf-amplifiers' },
+    { name: 'Patient Tables', slug: 'patient-tables' },
+  ];
 
   return (
-    <div className="container" style={{ padding: '30px 20px' }}>
-      <h1 style={{ marginBottom: 8 }}>Spare parts & accessories</h1>
-      <p style={{ color: '#6b7280', marginBottom: 24 }}>
-        MRI coils, patient tables, cables, RF doors and accessories from verified sellers.
-      </p>
-
-      {rows.length === 0 ? (
-        <div className="card" style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>
-          No parts listed yet.
-          <div style={{ marginTop: 12 }}>
-            <Link href="/dashboard/listings/new" className="btn">List a part</Link>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-4">
-          {rows.map((item) => <ListingCard key={item.id} item={item} />)}
-        </div>
-      )}
+    <div className="container" style={{ padding: '40px 20px' }}>
+      <h1>MRI Parts</h1>
+      <p style={{ color: '#6b7280', marginBottom: 30 }}>Find replacement components for MRI systems.</p>
+      <div className="grid grid-3">
+        {parts.map(p => (
+          <Link key={p.slug} href={`/listings?category=${p.slug}`} className="card" style={{ padding: 20 }}>
+            <h3>{p.name}</h3>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
