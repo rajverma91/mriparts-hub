@@ -70,21 +70,21 @@ export default function Header() {
           <div className="hdr-controls">
 
             {/* Language */}
-            <button type="button" className="hdr-select" aria-label="Language">
+            {/* <button type="button" className="hdr-select" aria-label="Language">
               <span className="hdr-flag">🇺🇸</span>
               <span>English</span>
               <svg className="hdr-caret" width="10" height="6" viewBox="0 0 10 6" fill="currentColor">
                 <path d="M0 0l5 6 5-6z" />
               </svg>
-            </button>
+            </button> */}
 
             {/* Currency */}
-            <button type="button" className="hdr-select" aria-label="Currency">
+            {/* <button type="button" className="hdr-select" aria-label="Currency">
               <span>USD</span>
               <svg className="hdr-caret" width="10" height="6" viewBox="0 0 10 6" fill="currentColor">
                 <path d="M0 0l5 6 5-6z" />
               </svg>
-            </button>
+            </button> */}
 
             {/* Saved heart */}
             <Link href="/account/saved" className="hdr-heart" aria-label="Saved listings">

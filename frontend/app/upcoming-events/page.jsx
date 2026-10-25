@@ -6,7 +6,7 @@ export default async function UpcomingEventsPage() {
   const res = await fetch(`${API}/news`, { cache: 'no-store' });
   const allPosts = res.ok ? await res.json() : [];
   
-  // Filter only posts where the category is "Upcoming Events"
+  // Filter ONLY posts where the category is exactly "Upcoming Events"
   const events = allPosts.filter((n) => n.category === 'Upcoming Events');
 
   return (
@@ -37,6 +37,9 @@ export default async function UpcomingEventsPage() {
                     {n.title}
                   </Link>
                 </h3>
+                <p style={{ color: '#6b7280', fontSize: 14, lineHeight: 1.6, marginBottom: 20, flex: 1 }}>
+                  {n.content.replace(/<[^>]+>/g, '').substring(0, 120)}...
+                </p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                   <span style={{ fontSize: 12, color: '#9ca3af' }}>
                     {new Date(n.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

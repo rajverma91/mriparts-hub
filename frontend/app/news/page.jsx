@@ -13,7 +13,12 @@ export default function NewsPage() {
     (async () => {
       try {
         const res = await fetch(`${API}/news`);
-        if (res.ok) setPosts(await res.json());
+        if (res.ok) {
+          const data = await res.json();
+          // Filter out Upcoming Events so they only show on the Events page
+          const newsOnly = data.filter((n) => n.category !== 'Upcoming Events');
+          setPosts(newsOnly);
+        }
       } catch (e) {
         console.error(e);
       } finally {
