@@ -107,7 +107,7 @@ function DirectoryContent() {
       </div>
     </div>
   );
-}
+} 
 
 export default function DirectoryPage() {
   return (
