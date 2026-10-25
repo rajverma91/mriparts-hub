@@ -9,6 +9,7 @@ router.get('/categories', async (req, res) => {
       `SELECT c.*, (SELECT COUNT(*) FROM listings l
                     WHERE l.category_id = c.id AND l.status = 'active') AS count
        FROM categories c
+       HAVING count > 0
        ORDER BY c.name`
     );
     res.json(rows);
