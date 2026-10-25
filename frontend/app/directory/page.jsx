@@ -101,14 +101,12 @@ function DirectoryContent() {
           ))}
         </div>
       )}
-
       <div style={{ marginTop: 40, textAlign: 'center' }}>
         <Link href="/" className="btn btn-outline">← Back to home</Link>
       </div>
     </div>
   );
 } 
-
 export default function DirectoryPage() {
   return (
     <Suspense fallback={<div className="container" style={{ padding: 40 }}>Loading...</div>}>
