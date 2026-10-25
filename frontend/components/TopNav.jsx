@@ -16,7 +16,8 @@ const LINKS = [
   { href: '/membership-plans',         label: 'Membership Plans' },
   { href: '/directory',         label: 'Directory' },
   { href: '/faq', label: "FAQ's" },
-  { href: '/news', label: 'News & Blog' },
+  { href: '/news',             label: 'News & Blog' },       // ← Added
+  { href: '/upcoming-events',  label: 'Upcoming Events' },
   // { href: '/manufacturers',       label: 'Manufacturers' },
   // { href: '/sellers/register',    label: 'For Manufacturers' },
   // { href: '/auctions',            label: 'Auctions' },

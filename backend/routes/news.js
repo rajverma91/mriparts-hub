@@ -43,8 +43,8 @@ router.get('/:slug', async (req, res) => {
 // ADMIN: Create news
 router.post('/', authRequired, adminRequired, upload.single('image'), async (req, res) => {
   try {
-    // ADDED: seo_title, seo_description, tags
-    const { title, content, category, seo_title, seo_description, tags } = req.body;
+    // Accept category_name from req.body
+    const { title, content, category_name, seo_title, seo_description, tags } = req.body;
     
     if (!title || !content) return res.status(400).json({ error: 'Title and content required' });
 
@@ -62,7 +62,7 @@ router.post('/', authRequired, adminRequired, upload.single('image'), async (req
 
     const slug = `${slugify(title)}-${Date.now()}`;
     
-    // ADDED: the new fields to the INSERT query
+    // Save category_name to the category column
     const [result] = await pool.query(
       `INSERT INTO news 
        (title, slug, content, image_url, category, seo_title, seo_description, tags) 
@@ -72,7 +72,7 @@ router.post('/', authRequired, adminRequired, upload.single('image'), async (req
         slug, 
         content, 
         image_url, 
-        category || 'Industry News',
+        category_name || 'Industry News', // Use the custom category here
         seo_title || null,
         seo_description || null,
         tags || null
@@ -85,7 +85,6 @@ router.post('/', authRequired, adminRequired, upload.single('image'), async (req
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 // ADMIN: Delete news
 router.delete('/:id', authRequired, adminRequired, async (req, res) => {
   try {

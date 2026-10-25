@@ -20,7 +20,7 @@ export default function AdminPage() {
     title: '', 
     content: '', 
     imageFile: null,
-    category: 'Industry News',
+    category_name: 'Industry News',
     seo_title: '',
     seo_description: '',
     tags: ''
@@ -71,7 +71,7 @@ export default function AdminPage() {
       const formData = new FormData();
       formData.append('title', newsForm.title);
       formData.append('content', newsForm.content);
-      formData.append('category', newsForm.category);
+      formData.append('category_name', newsForm.category_name); // Fixed here
       formData.append('seo_title', newsForm.seo_title);
       formData.append('seo_description', newsForm.seo_description);
       formData.append('tags', newsForm.tags);
@@ -92,7 +92,7 @@ export default function AdminPage() {
       toast.success('News post created!', { id: toastId });
       setNewsForm({ 
         title: '', content: '', imageFile: null, 
-        category: 'Industry News', seo_title: '', seo_description: '', tags: '' 
+        category_name: 'Industry News', seo_title: '', seo_description: '', tags: '' 
       });
     } catch (err) {
       toast.error(err.message, { id: toastId });
@@ -244,25 +244,29 @@ export default function AdminPage() {
                 <button className="btn" type="submit" style={{ width: '100%' }}>Publish Post</button>
               </div>
 
-              {/* Categories Box */}
+              {/* Categories Box (UPDATED TO TEXT INPUT) */}
               <div className="card" style={{ padding: 20, marginBottom: 20 }}>
                 <h4 style={{ marginBottom: 16 }}>Category</h4>
-                <select 
-                  value={newsForm.category} 
-                  onChange={(e) => setNewsForm({ ...newsForm, category: e.target.value })}
-                  style={{ width: '100%', padding: 10 }}
-                >
-                  <option value="Industry News">Industry News</option>
-                  <option value="MRI Parts">MRI Parts</option>
-                  <option value="CT Parts">CT Parts</option>
-                  <option value="MRI Safety">MRI Safety</option>
-                  <option value="Repairs & Maintenance">Repairs & Maintenance</option>
-                  <option value="Equipment Leasing">Equipment Leasing</option>
-                  <option value="Accessories">Accessories</option>
-                </select>
+                <input 
+                  list="news-category-options"
+                  value={newsForm.category_name} 
+                  onChange={(e) => setNewsForm({ ...newsForm, category_name: e.target.value })}
+                  placeholder="Select or type a new category"
+                  style={{ width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4 }}
+                />
+                <datalist id="news-category-options">
+                  <option value="Industry News" />
+                  <option value="MRI Parts" />
+                  <option value="CT Parts" />
+                  <option value="MRI Safety" />
+                  <option value="Repairs & Maintenance" />
+                  <option value="Equipment Leasing" />
+                  <option value="Accessories" />
+                  <option value="Upcoming Events" />
+                </datalist>
               </div>
 
-              {/* SEO Box (NEW) */}
+              {/* SEO Box */}
               <div className="card" style={{ padding: 20, marginBottom: 20 }}>
                 <h4 style={{ marginBottom: 16 }}>SEO Settings</h4>
                 <div className="form-row" style={{ marginBottom: 12 }}>
