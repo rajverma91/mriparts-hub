@@ -16,7 +16,7 @@ const favoriteRoutes = require('./routes/favorites');
 const paymentRoutes  = require('./routes/payments');
 const searchRoutes   = require('./routes/search');
 const newsRoutes = require('./routes/news');
-
+const directoryRoutes = require('./routes/directory');
 const app = express();
 
 // ── CORS CONFIGURATION ──
@@ -64,6 +64,7 @@ app.use('/api/payments',  paymentRoutes);
 app.use('/api',           categoryRoutes);
 app.use('/api/admin',     adminRoutes);
 app.use('/api/news', newsRoutes);
+app.use('/api/directory', directoryRoutes);
 
 app.get('/', (_, res) => res.json({ ok: true, service: 'MRI Parts Hub API' }));
 

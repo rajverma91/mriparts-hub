@@ -49,10 +49,16 @@ const LINKS = [
     ]
   },
   { label: 'Membership Plans', href: '/membership-plans' },
-  { 
+ { 
     label: 'Directory', 
     href: '/directory',
-    dropdown: [] // This will be populated dynamically
+    dropdown: [
+      { label: 'MRI Manufacturer', href: '/directory?category=MRI%20Manufacturer' },
+      { label: 'MRI Repair Companies', href: '/directory?category=MRI%20Repair%20Companies' },
+      { label: 'CT Repair and sale Companies', href: '/directory?category=CT%20Repair%20and%20sale%20Companies' },
+      { label: 'Hospitals', href: '/directory?category=Hospitals' },
+      { label: 'Imaging Centres', href: '/directory?category=Imaging%20Centres' },
+    ]
   },
   { label: "FAQ's", href: '/faq' },
   { label: 'News & Blog', href: '/news' },
