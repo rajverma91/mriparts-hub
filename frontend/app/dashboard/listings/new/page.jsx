@@ -14,8 +14,8 @@ export default function NewListing() {
   
   const [form, setForm] = useState({
     title: '', description: '', price: 0, currency: 'USD', condition_type: 'used',
-    category_id: '', 
-    brand_name: '', // Changed from brand_id to brand_name for text input
+    category_name: '', // Changed from category_id to category_name
+    brand_name: '', 
     model: '', 
     address: '', city: '', state: '', pincode: '', country: '',
     gallery_json: [],
@@ -46,7 +46,7 @@ export default function NewListing() {
       await api.post('/listings', {
         ...form,
         image_url: form.gallery_json[0] || null,
-        category_id: form.category_id || null,
+        // We no longer send category_id, we send category_name
       });
       
       toast.success('Listing submitted for review!', { id: toastId });
@@ -130,12 +130,18 @@ export default function NewListing() {
             </select>
           </div>
 
+          {/* Updated Category Field (Text Input with Datalist) */}
           <div className="form-row">
             <label>Category</label>
-            <select value={form.category_id} onChange={(e) => update('category_id', e.target.value)}>
-              <option value="">Select</option>
-              {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <input 
+              list="category-options" 
+              value={form.category_name} 
+              onChange={(e) => update('category_name', e.target.value)} 
+              placeholder="Select or type a new category"
+            />
+            <datalist id="category-options">
+              {cats.map((c) => <option key={c.id} value={c.name} />)}
+            </datalist>
           </div>
 
           {/* Updated Brand Field (Text Input with Datalist) */}

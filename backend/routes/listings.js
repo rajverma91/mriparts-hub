@@ -249,7 +249,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// AUTH: create listing (WITH ADMIN BYPASS)
+// AUTH: create listing (WITH ADMIN BYPASS & NEW CATEGORY/BRAND)
 // ─────────────────────────────────────────────────────────────
 router.post('/', authRequired, verifiedRequired, async (req, res) => {
   try {
@@ -260,7 +260,6 @@ router.post('/', authRequired, verifiedRequired, async (req, res) => {
     }
 
     // ── SUBSCRIPTION LIMIT CHECK ──
-    // Admins are exempt from this limit
     if (req.user.role !== 'admin') {
       const { plan } = await getUserPlan(req.user.id);
       const [countRows] = await pool.query(
@@ -276,6 +275,22 @@ router.post('/', authRequired, verifiedRequired, async (req, res) => {
       }
     }
     // ── END SUBSCRIPTION CHECK ──
+
+    // ── HANDLE NEW CATEGORY ──
+    let finalCategoryId = null;
+    if (b.category_name && String(b.category_name).trim()) {
+      const catName = String(b.category_name).trim().slice(0, 120);
+      
+      const [existingCat] = await pool.query('SELECT id FROM categories WHERE name = ?', [catName]);
+      
+      if (existingCat.length > 0) {
+        finalCategoryId = existingCat[0].id;
+      } else {
+        const catSlug = slugify(catName);
+        const [newCat] = await pool.query('INSERT INTO categories (name, slug) VALUES (?, ?)', [catName, catSlug]);
+        finalCategoryId = newCat.insertId;
+      }
+    }
 
     // ── HANDLE NEW BRAND ──
     let finalBrandId = null;
@@ -303,7 +318,7 @@ router.post('/', authRequired, verifiedRequired, async (req, res) => {
     const params = [
       req.user.id, title, slug, nn(b.description), price,
       nn(b.currency) || 'USD', nn(b.condition_type) || 'used',
-      nn(b.category_id), finalBrandId, nn(b.model), 
+      finalCategoryId, finalBrandId, nn(b.model), 
       nn(b.address), nn(b.city), nn(b.state), nn(b.pincode), nn(b.country),
       nn(primary), gallery ? JSON.stringify(gallery) : null, advertType
     ];
@@ -345,6 +360,32 @@ router.put('/:id', authRequired, async (req, res) => {
       ? b.advert_type
       : (old.advert_type || 'sell');
 
+    // Handle Category name update
+    let finalCategoryId = old.category_id;
+    if (b.category_name && String(b.category_name).trim()) {
+      const catName = String(b.category_name).trim().slice(0, 120);
+      const [existingCat] = await pool.query('SELECT id FROM categories WHERE name = ?', [catName]);
+      if (existingCat.length > 0) {
+        finalCategoryId = existingCat[0].id;
+      } else {
+        const [newCat] = await pool.query('INSERT INTO categories (name, slug) VALUES (?, ?)', [catName, slugify(catName)]);
+        finalCategoryId = newCat.insertId;
+      }
+    }
+
+    // Handle Brand name update
+    let finalBrandId = old.brand_id;
+    if (b.brand_name && String(b.brand_name).trim()) {
+      const brandName = String(b.brand_name).trim().slice(0, 120);
+      const [existingBrand] = await pool.query('SELECT id FROM brands WHERE name = ?', [brandName]);
+      if (existingBrand.length > 0) {
+        finalBrandId = existingBrand[0].id;
+      } else {
+        const [newBrand] = await pool.query('INSERT INTO brands (name) VALUES (?)', [brandName]);
+        finalBrandId = newBrand.insertId;
+      }
+    }
+
     await pool.query(
       `UPDATE listings SET
          title=?, description=?, price=?, currency=?, condition_type=?,
@@ -357,8 +398,8 @@ router.put('/:id', authRequired, async (req, res) => {
         newPrice,
         nn(b.currency) || 'USD',
         nn(b.condition_type) || 'used',
-        nn(b.category_id),
-        nn(b.brand_id),
+        finalCategoryId,
+        finalBrandId,
         nn(b.model),
         nn(b.address),
         nn(b.city),

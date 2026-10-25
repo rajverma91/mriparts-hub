@@ -15,6 +15,8 @@ const LINKS = [
   // { href: '/partnership',         label: 'Become a partner' },
   { href: '/membership-plans',         label: 'Membership Plans' },
   { href: '/directory',         label: 'Directory' },
+  { href: '/faq', label: "FAQ's" },
+  { href: '/news', label: 'News & Blog' },
   // { href: '/manufacturers',       label: 'Manufacturers' },
   // { href: '/sellers/register',    label: 'For Manufacturers' },
   // { href: '/auctions',            label: 'Auctions' },

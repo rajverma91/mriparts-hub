@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import MultiImageUpload from '@/components/MultiImageUpload';
 import FeaturePromo from '@/components/FeaturePromo';
 import { parseGallery } from '@/lib/parseGallery';
+import toast from 'react-hot-toast';
 
 export default function EditListing() {
   const { id } = useParams();
@@ -28,18 +29,21 @@ export default function EditListing() {
         let gallery = parseGallery(item.gallery_json);
         if (!gallery.length && item.image_url) gallery = [item.image_url];
 
+        // NOTE: We now map the joined category/brand names back into category_name/brand_name
         setForm({
           title: item.title || '',
           description: item.description || '',
           price: item.price || 0,
           currency: item.currency || 'USD',
           condition_type: item.condition_type || 'used',
-          category_id: item.category_id || '',
-          brand_id: item.brand_id || '',
+          category_name: item.category || '', // Using the joined name from API
+          brand_name: item.brand || '',       // Using the joined name from API
           model: item.model || '',
-          year: item.year || '',
-          country: item.country || '',
+          address: item.address || '',
           city: item.city || '',
+          state: item.state || '',
+          pincode: item.pincode || '',
+          country: item.country || '',
           gallery_json: gallery
         });
       } catch (e) {
@@ -53,17 +57,18 @@ export default function EditListing() {
   async function submit(e) {
     e.preventDefault();
     setError('');
+    const toastId = toast.loading('Saving changes...');
     try {
       await api.put(`/listings/${id}`, {
         ...form,
         image_url: form.gallery_json[0] || null,
-        category_id: form.category_id || null,
-        brand_id: form.brand_id || null,
-        year: form.year || null
       });
-      alert('Saved.');
+      toast.success('Listing updated successfully!', { id: toastId });
       router.push('/dashboard');
-    } catch (e) { setError(e.message); }
+    } catch (e) { 
+      toast.error(e.message, { id: toastId });
+      setError(e.message); 
+    }
   }
 
   if (error) return <div className="container" style={{ padding: 40 }}>{error}</div>;
@@ -73,7 +78,6 @@ export default function EditListing() {
     <form onSubmit={submit} className="container" style={{ padding: '30px 20px', maxWidth: 800 }}>
       <h1>Edit Listing</h1>
 
-      {/* ⭐ Feature this listing banner — the line you were missing */}
       <FeaturePromo listingId={id} />
 
       <div className="card" style={{ padding: 24, marginTop: 16 }}>
@@ -110,45 +114,70 @@ export default function EditListing() {
             </select>
           </div>
 
+          {/* Updated Category Field */}
           <div className="form-row">
             <label>Category</label>
-            <select value={form.category_id} onChange={(e) => update('category_id', e.target.value)}>
-              <option value="">Select</option>
-              {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <input 
+              list="category-options" 
+              value={form.category_name} 
+              onChange={(e) => update('category_name', e.target.value)} 
+              placeholder="Select or type a new category"
+            />
+            <datalist id="category-options">
+              {cats.map((c) => <option key={c.id} value={c.name} />)}
+            </datalist>
           </div>
 
+          {/* Updated Brand Field */}
           <div className="form-row">
-            <label>Brand</label>
-            <select value={form.brand_id} onChange={(e) => update('brand_id', e.target.value)}>
-              <option value="">Select</option>
-              {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
+            <label>Brand / Manufacturer</label>
+            <input 
+              list="brand-options" 
+              value={form.brand_name} 
+              onChange={(e) => update('brand_name', e.target.value)} 
+              placeholder="Select or type a new brand"
+            />
+            <datalist id="brand-options">
+              {brands.map((b) => <option key={b.id} value={b.name} />)}
+            </datalist>
           </div>
 
           <div className="form-row">
             <label>Model</label>
             <input value={form.model} onChange={(e) => update('model', e.target.value)} />
           </div>
+        </div>
+
+        {/* Address Fields */}
+        <h3 style={{ marginTop: 24, marginBottom: 12, fontSize: 18 }}>Location Details</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div className="form-row" style={{ gridColumn: '1 / -1' }}>
+            <label>Address</label>
+            <input value={form.address} onChange={(e) => update('address', e.target.value)} placeholder="Street address" />
+          </div>
+          
+          <div className="form-row">
+            <label>City</label>
+            <input value={form.city} onChange={(e) => update('city', e.target.value)} />
+          </div>
 
           <div className="form-row">
-            <label>Year</label>
-            <input type="number" value={form.year}
-                   onChange={(e) => update('year', e.target.value)} />
+            <label>State / Province</label>
+            <input value={form.state} onChange={(e) => update('state', e.target.value)} />
+          </div>
+
+          <div className="form-row">
+            <label>PIN / ZIP Code</label>
+            <input value={form.pincode} onChange={(e) => update('pincode', e.target.value)} />
           </div>
 
           <div className="form-row">
             <label>Country</label>
             <input value={form.country} onChange={(e) => update('country', e.target.value)} />
           </div>
-
-          <div className="form-row">
-            <label>City</label>
-            <input value={form.city} onChange={(e) => update('city', e.target.value)} />
-          </div>
         </div>
 
-        <div className="form-row" style={{ marginTop: 12 }}>
+        <div className="form-row" style={{ marginTop: 24 }}>
           <label>Photos</label>
           <MultiImageUpload
             images={form.gallery_json}
