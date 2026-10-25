@@ -6,7 +6,7 @@ const { sendInquiryEmail } = require('../utils/mailer');
 const router = express.Router();
 
 // Set your admin email here
-const ADMIN_EMAIL = 'rbverma2119@gmail.com';
+const ADMIN_EMAIL = 'ramiscool1@gmail.com';
 
 // ─────────────────────────────────────────────────────────────
 // PUBLIC: buyer sends an inquiry
