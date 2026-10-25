@@ -13,6 +13,7 @@ export default function AdminPage() {
   const [listings, setListings] = useState([]);
   const [users,    setUsers]    = useState([]);
   const [reviews,  setReviews]  = useState([]);
+  const [directory, setDirectory] = useState([]); // Added directory state
   const [tab,      setTab]      = useState('listings');
   
   // News Form State
@@ -26,18 +27,30 @@ export default function AdminPage() {
     tags: ''
   });
 
+  // Directory Form State
+  const [dirForm, setDirForm] = useState({ 
+    name: '', 
+    category: 'MRI Manufacturer', 
+    website: '', 
+    phone: '', 
+    location: '' 
+  });
+
   async function load() {
     try {
-      const [s, l, u, r] = await Promise.all([
+      // Added fetch for directory
+      const [s, l, u, r, dir] = await Promise.all([
         api.get('/admin/stats'),
         api.get('/admin/listings'),
         api.get('/admin/users'),
-        api.get('/reviews/admin/all')
+        api.get('/reviews/admin/all'),
+        api.get('/directory')
       ]);
       setStats(s);
       setListings(l);
       setUsers(u);
       setReviews(r);
+      setDirectory(dir); // Set directory data
     } catch (e) {
       console.error(e);
       if (e.message.toLowerCase().includes('admin') || e.message.includes('token')) {
@@ -71,7 +84,7 @@ export default function AdminPage() {
       const formData = new FormData();
       formData.append('title', newsForm.title);
       formData.append('content', newsForm.content);
-      formData.append('category_name', newsForm.category_name); // Fixed here
+      formData.append('category_name', newsForm.category_name);
       formData.append('seo_title', newsForm.seo_title);
       formData.append('seo_description', newsForm.seo_description);
       formData.append('tags', newsForm.tags);
@@ -99,6 +112,26 @@ export default function AdminPage() {
     }
   }
 
+  // Directory Functions
+  async function createDirectory(e) {
+    e.preventDefault();
+    const toastId = toast.loading('Adding to directory...');
+    try {
+      await api.post('/directory', dirForm);
+      toast.success('Directory entry added!', { id: toastId });
+      setDirForm({ name: '', category: 'MRI Manufacturer', website: '', phone: '', location: '' });
+      load();
+    } catch (err) {
+      toast.error(err.message, { id: toastId });
+    }
+  }
+
+  async function deleteDirectory(id) {
+    if (!confirm('Delete this directory entry?')) return;
+    await api.del(`/directory/${id}`);
+    load();
+  }
+
   if (!stats) return <div className="container" style={{ padding: 40 }}>Loading or unauthorized...</div>;
 
   const pendingReviews = reviews.filter((r) => r.status === 'pending').length;
@@ -124,6 +157,7 @@ export default function AdminPage() {
         </button>
         <button className={`btn ${tab !== 'users' ? 'btn-outline' : ''}`} onClick={() => setTab('users')}>Users</button>
         <button className={`btn ${tab !== 'news' ? 'btn-outline' : ''}`} onClick={() => setTab('news')}>News / Blog</button>
+        <button className={`btn ${tab !== 'directory' ? 'btn-outline' : ''}`} onClick={() => setTab('directory')}>Directory</button>
       </div>
 
       {/* LISTINGS TAB */}
@@ -244,7 +278,7 @@ export default function AdminPage() {
                 <button className="btn" type="submit" style={{ width: '100%' }}>Publish Post</button>
               </div>
 
-              {/* Categories Box (UPDATED TO TEXT INPUT) */}
+              {/* Categories Box */}
               <div className="card" style={{ padding: 20, marginBottom: 20 }}>
                 <h4 style={{ marginBottom: 16 }}>Category</h4>
                 <input 
@@ -311,6 +345,72 @@ export default function AdminPage() {
               </div>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* DIRECTORY TAB */}
+      {tab === 'directory' && (
+        <div className="card" style={{ padding: 24, marginTop: 14 }}>
+          <h3 style={{ marginBottom: 20 }}>Add Company to Directory</h3>
+          
+          <form onSubmit={createDirectory} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 40 }}>
+            <div className="form-row">
+              <label>Company Name *</label>
+              <input required value={dirForm.name} onChange={(e) => setDirForm({ ...dirForm, name: e.target.value })} />
+            </div>
+            
+            <div className="form-row">
+              <label>Category *</label>
+              <select value={dirForm.category} onChange={(e) => setDirForm({ ...dirForm, category: e.target.value })}>
+                <option value="MRI Manufacturer">MRI Manufacturer</option>
+                <option value="MRI Repair Companies">MRI Repair Companies</option>
+                <option value="CT Repair and sale Companies">CT Repair and sale Companies</option>
+                <option value="Hospitals">Hospitals</option>
+                <option value="Imaging Centres">Imaging Centres</option>
+              </select>
+            </div>
+
+            <div className="form-row">
+              <label>Location</label>
+              <input value={dirForm.location} onChange={(e) => setDirForm({ ...dirForm, location: e.target.value })} placeholder="City, Country" />
+            </div>
+
+            <div className="form-row">
+              <label>Phone</label>
+              <input value={dirForm.phone} onChange={(e) => setDirForm({ ...dirForm, phone: e.target.value })} />
+            </div>
+
+            <div className="form-row" style={{ gridColumn: '1 / -1' }}>
+              <label>Website URL</label>
+              <input value={dirForm.website} onChange={(e) => setDirForm({ ...dirForm, website: e.target.value })} placeholder="https://..." />
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <button className="btn">Add to Directory</button>
+            </div>
+          </form>
+
+          <h3 style={{ marginBottom: 16 }}>Existing Directory Entries ({directory.length})</h3>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead><tr style={{ textAlign: 'left', borderBottom: '2px solid #eee' }}>
+              <th style={{ padding: 8 }}>Name</th>
+              <th style={{ padding: 8 }}>Category</th>
+              <th style={{ padding: 8 }}>Location</th>
+              <th style={{ padding: 8 }}>Actions</th>
+            </tr></thead>
+            <tbody>
+              {directory.map((d) => (
+                <tr key={d.id} style={{ borderTop: '1px solid #eee' }}>
+                  <td style={{ padding: 8, fontWeight: 600 }}>{d.name}</td>
+                  <td style={{ padding: 8 }}>{d.category}</td>
+                  <td style={{ padding: 8 }}>{d.location || '—'}</td>
+                  <td style={{ padding: 8 }}>
+                    <button className="btn btn-danger" style={{ padding: '4px 10px' }} onClick={() => deleteDirectory(d.id)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
