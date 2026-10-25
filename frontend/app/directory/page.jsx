@@ -74,32 +74,33 @@ function DirectoryContent() {
         </div>
       ) : (
         <div className="grid grid-2" style={{ gap: 20 }}>
-         {items.map((item) => (
-  <div key={item.id} className="card" style={{ padding: 20 }}>
-    <div style={{ fontSize: 12, color: '#0d6efd', fontWeight: 700, marginBottom: 8 }}>
-      {item.category}
-    </div>
-    <h3 style={{ fontSize: 18, marginBottom: 12 }}>{item.name}</h3>
-    
-    <div style={{ fontSize: 14, color: '#374151', display: 'grid', gap: 6 }}>
-      {item.location && <div>📍 {item.location}</div>}
-      {item.phone && <div>📞 {item.phone}</div>}
-      
-      {item.website && (
-        <div>
-          🌐 <a 
-               href={item.website.startsWith('http') ? item.website : `https://${item.website}`} 
-               target="_blank" 
-               rel="noreferrer" 
-               style={{ color: '#0d6efd' }}
-             >
-               Visit Website
-             </a>
+          {items.map((item) => (
+            <div key={item.id} className="card" style={{ padding: 20 }}>
+              <div style={{ fontSize: 12, color: '#0d6efd', fontWeight: 700, marginBottom: 8 }}>
+                {item.category}
+              </div>
+              <h3 style={{ fontSize: 18, marginBottom: 12 }}>{item.name}</h3>
+              
+              <div style={{ fontSize: 14, color: '#374151', display: 'grid', gap: 6 }}>
+                {item.location && <div>📍 {item.location}</div>}
+                {item.phone && <div>📞 {item.phone}</div>}
+                {item.website && (
+                  <div>
+                    🌐 <a 
+                         href={item.website.startsWith('http') ? item.website : `https://${item.website}`} 
+                         target="_blank" 
+                         rel="noreferrer" 
+                         style={{ color: '#0d6efd' }}
+                       >
+                         Visit Website
+                       </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
-    </div>
-  </div>
-))}
 
       <div style={{ marginTop: 40, textAlign: 'center' }}>
         <Link href="/" className="btn btn-outline">← Back to home</Link>
