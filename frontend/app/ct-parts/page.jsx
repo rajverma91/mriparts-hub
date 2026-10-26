@@ -97,7 +97,7 @@ function CtPartsContent() {
               className={!currentCat ? 'side-link active' : 'side-link'}
               style={{ textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer' }}
             >
-              All CT Parts
+              All Parts
             </button>
 
             {categories.map(c => (
@@ -129,7 +129,7 @@ function CtPartsContent() {
               onChange={(e) => setSearchCat(e.target.value)}
               style={{ width: 220, border: '1px solid #e5e7eb', padding: '10px 14px', borderRadius: 8 }}
             >
-              <option value="">All CT Categories</option>
+              <option value="">All Categories</option>
               {categories.map(c => (
                 <option key={c.id} value={c.slug}>{c.name}</option>
               ))}
