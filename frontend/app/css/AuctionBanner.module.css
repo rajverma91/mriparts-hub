@@ -9,20 +9,20 @@
 .sliderWrapper {
   position: relative;
   width: 100%;
-  height: 120px;        /* <-- fixed height */
+  height: 300px;        /* <-- fixed height */
   box-sizing: border-box;
 }
 
 /* Each slide must fill the 120px height */
 .slide {
-  height: 120px;
+  height: 300px;
   box-sizing: border-box;
 }
 
 /* Image card fills the slide */
 .imageCard {
   width: 100%;
-  height: 120px;
+  height: 300px;
   overflow: hidden;
   border-radius: 10px;
   background: #f2f2f2;
@@ -79,7 +79,7 @@
 .sliderWrapper :global(.slick-track),
 .sliderWrapper :global(.slick-slide),
 .sliderWrapper :global(.slick-slide) > div {
-  height: 120px !important;
+  height: 300px !important;
 }
 
 .sliderWrapper :global(.slick-slide) > div {

@@ -67,9 +67,9 @@ router.post('/', async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 router.post('/service-request', async (req, res) => {
   try {
-    const { name, email, phone, address, service } = req.body;
+    const { name, email, phone, address, service, description  } = req.body;
     
-    if (!name || !email || !phone || !service) {
+   if (!name || !email || !phone || !service) {
       return res.status(400).json({ error: 'Please fill in all required fields.' });
     }
 
@@ -82,6 +82,8 @@ router.post('/service-request', async (req, res) => {
       <p><b>Email:</b> ${email}</p>
       <p><b>Phone:</b> ${phone}</p>
       <p><b>Address:</b> ${address || 'Not provided'}</p>
+      <p><b>Description:</b></p>
+      <p style="white-space: pre-line; background: #f3f4f6; padding: 10px;">${description || 'No description provided'}</p>
     `;
 
     // Send using nodemailer

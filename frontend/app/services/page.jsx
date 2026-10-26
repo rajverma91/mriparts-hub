@@ -16,7 +16,8 @@ export default function ServicesPage() {
     email: '',
     phone: '',
     address: '',
-    service: 'MRI Part Repair'
+    service: 'MRI Part Repair',
+    description: '' // Added description state
   });
 
   const update = (k, v) => setForm({ ...form, [k]: v });
@@ -26,12 +27,10 @@ export default function ServicesPage() {
     const toastId = toast.loading('Sending your request...');
     
     try {
-      // We will send this to the inquiries endpoint
-      // Since it's not tied to a specific listing, we'll send a special payload
       const res = await api.post('/inquiries/service-request', form);
       
       toast.success('Request sent! Our team will contact you shortly.', { id: toastId });
-      setForm({ name: '', email: '', phone: '', address: '', service: 'MRI Part Repair' });
+      setForm({ name: '', email: '', phone: '', address: '', service: 'MRI Part Repair', description: '' });
     } catch (err) {
       toast.error(err.message || 'Failed to send request. Please try again.', { id: toastId });
     }
@@ -91,22 +90,27 @@ export default function ServicesPage() {
             </select>
           </div>
 
+          {/* Added Description Textarea */}
+          <div className="form-row">
+            <label>Description</label>
+            <textarea 
+              rows={5} 
+              maxLength={700} 
+              value={form.description} 
+              onChange={(e) => update('description', e.target.value)} 
+              placeholder="Please describe the issue, model number, or specific requirements for your service request..." 
+              style={{ resize: 'vertical' }}
+            />
+            <div style={{ fontSize: 12, color: '#9ca3af', textAlign: 'right', marginTop: 4 }}>
+              {form.description.length} / 700 characters
+            </div>
+          </div>
+
           <button type="submit" className="btn" style={{ width: '100%', marginTop: 10 }}>
             Send Request
           </button>
         </form>
       </div>
-
-      {/* Partner Banner */}
-      {/* <div className="feature-banner" style={{ marginTop: 20, justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontWeight: 700, fontSize: 18 }}>Offer your services</div>
-          <p style={{ color: '#6b7280', marginTop: 6 }}>
-            Join MRI Parts Hub as a service partner and reach buyers worldwide.
-          </p>
-          <Link href="/register" className="btn" style={{ marginTop: 12 }}>Become a service partner</Link>
-        </div>
-      </div> */}
     </div>
   );
 }
