@@ -2,9 +2,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { api } from '@/lib/api';
 import MultiImageUpload from '@/components/MultiImageUpload';
 import toast from 'react-hot-toast';
+import 'react-quill/dist/quill.snow.css';
+
+// Dynamically import ReactQuill to avoid SSR issues
+const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 export default function NewListing() {
   const [cats, setCats]       = useState([]);
@@ -14,7 +19,7 @@ export default function NewListing() {
   
   const [form, setForm] = useState({
     title: '', description: '', price: 0, currency: 'USD', condition_type: 'used',
-    category_name: '', // Changed from category_id to category_name
+    category_name: '',
     brand_name: '', 
     model: '', 
     address: '', city: '', state: '', pincode: '', country: '',
@@ -46,7 +51,6 @@ export default function NewListing() {
       await api.post('/listings', {
         ...form,
         image_url: form.gallery_json[0] || null,
-        // We no longer send category_id, we send category_name
       });
       
       toast.success('Listing submitted for review!', { id: toastId });
@@ -103,9 +107,18 @@ export default function NewListing() {
           <input required value={form.title} onChange={(e) => update('title', e.target.value)} />
         </div>
 
+        {/* RICH TEXT EDITOR FOR DESCRIPTION */}
         <div className="form-row">
           <label>Description</label>
-          <textarea rows={5} value={form.description} onChange={(e) => update('description', e.target.value)} />
+          <div style={{ background: '#fff', minHeight: 200, marginBottom: 50 }}>
+            <ReactQuill 
+              theme="snow" 
+              value={form.description} 
+              onChange={(content) => update('description', content)}
+              style={{ height: 150 }}
+              placeholder="Describe your equipment, condition, specs, etc..."
+            />
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -130,7 +143,6 @@ export default function NewListing() {
             </select>
           </div>
 
-          {/* Updated Category Field (Text Input with Datalist) */}
           <div className="form-row">
             <label>Category</label>
             <input 
@@ -144,7 +156,6 @@ export default function NewListing() {
             </datalist>
           </div>
 
-          {/* Updated Brand Field (Text Input with Datalist) */}
           <div className="form-row">
             <label>Brand / Manufacturer</label>
             <input 
@@ -164,7 +175,7 @@ export default function NewListing() {
           </div>
         </div>
 
-        {/* New Address Fields */}
+        {/* Address Fields */}
         <h3 style={{ marginTop: 24, marginBottom: 12, fontSize: 18 }}>Location Details</h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div className="form-row" style={{ gridColumn: '1 / -1' }}>

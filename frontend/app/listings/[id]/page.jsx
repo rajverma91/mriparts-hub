@@ -32,20 +32,22 @@ export async function generateMetadata({ params }) {
   const item = await fetchListing(params.id);
   if (!item) return { title: 'Listing not found — MRI Parts Hub' };
 
-  const title = `${item.title} — ${item.brand || 'Medical Equipment'} | MRI Parts Hub`;
-  const description = (item.description ||
-    `${item.condition_type} ${item.category || 'equipment'} available from ${item.country || 'verified sellers'}.`)
+  // Strip HTML tags for meta description
+  const plainDesc = (item.description || `${item.condition_type} ${item.category || 'equipment'} available from ${item.country || 'verified sellers'}.`)
+    .replace(/<[^>]+>/g, ' ')
     .slice(0, 160);
+
+  const title = `${item.title} — ${item.brand || 'Medical Equipment'} | MRI Parts Hub`;
 
   const gallery = parseGallery(item.gallery_json);
   const image = gallery[0] || item.image_url;
 
   return {
     title,
-    description,
+    description: plainDesc,
     openGraph: {
       title,
-      description,
+      description: plainDesc,
       images: image ? [image] : [],
       type: 'website',
       url: `https://mripartshub.com/listings/${item.slug || item.id}`
@@ -53,7 +55,7 @@ export async function generateMetadata({ params }) {
     twitter: {
       card: 'summary_large_image',
       title,
-      description,
+      description: plainDesc,
       images: image ? [image] : []
     }
   };
@@ -97,9 +99,12 @@ export default async function ListingDetail({ params }) {
 
           <div className="card" style={{ padding: 22, marginTop: 20 }}>
             <h3 style={{ marginBottom: 10 }}>Product Description</h3>
-            <p style={{ whiteSpace: 'pre-line', color: '#374151' }}>
-              {item.description || 'No description provided.'}
-            </p>
+            {/* RENDER HTML CONTENT FROM RICH TEXT EDITOR */}
+            <div 
+              className="ql-editor"
+              style={{ padding: 0, color: '#374151', lineHeight: 1.6, fontSize: 15 }}
+              dangerouslySetInnerHTML={{ __html: item.description || '<p style="color:#6b7280">No description provided.</p>' }} 
+            />
           </div>
 
           <SpecsTable item={item} />

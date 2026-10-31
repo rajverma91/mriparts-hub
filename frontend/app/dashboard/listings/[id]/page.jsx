@@ -1,11 +1,16 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { api } from '@/lib/api';
 import MultiImageUpload from '@/components/MultiImageUpload';
 import FeaturePromo from '@/components/FeaturePromo';
 import { parseGallery } from '@/lib/parseGallery';
 import toast from 'react-hot-toast';
+import 'react-quill/dist/quill.snow.css';
+
+// Dynamically import ReactQuill to avoid SSR issues
+const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 export default function EditListing() {
   const { id } = useParams();
@@ -29,15 +34,14 @@ export default function EditListing() {
         let gallery = parseGallery(item.gallery_json);
         if (!gallery.length && item.image_url) gallery = [item.image_url];
 
-        // NOTE: We now map the joined category/brand names back into category_name/brand_name
         setForm({
           title: item.title || '',
           description: item.description || '',
           price: item.price || 0,
           currency: item.currency || 'USD',
           condition_type: item.condition_type || 'used',
-          category_name: item.category || '', // Using the joined name from API
-          brand_name: item.brand || '',       // Using the joined name from API
+          category_name: item.category || '', 
+          brand_name: item.brand || '',       
           model: item.model || '',
           address: item.address || '',
           city: item.city || '',
@@ -86,10 +90,17 @@ export default function EditListing() {
           <input required value={form.title} onChange={(e) => update('title', e.target.value)} />
         </div>
 
+        {/* RICH TEXT EDITOR FOR DESCRIPTION */}
         <div className="form-row">
           <label>Description</label>
-          <textarea rows={5} value={form.description}
-                    onChange={(e) => update('description', e.target.value)} />
+          <div style={{ background: '#fff', minHeight: 200, marginBottom: 50 }}>
+            <ReactQuill 
+              theme="snow" 
+              value={form.description} 
+              onChange={(content) => update('description', content)}
+              style={{ height: 150 }}
+            />
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -114,7 +125,6 @@ export default function EditListing() {
             </select>
           </div>
 
-          {/* Updated Category Field */}
           <div className="form-row">
             <label>Category</label>
             <input 
@@ -128,7 +138,6 @@ export default function EditListing() {
             </datalist>
           </div>
 
-          {/* Updated Brand Field */}
           <div className="form-row">
             <label>Brand / Manufacturer</label>
             <input 

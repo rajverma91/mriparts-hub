@@ -13,7 +13,7 @@ export default function AdminPage() {
   const [listings, setListings] = useState([]);
   const [users,    setUsers]    = useState([]);
   const [reviews,  setReviews]  = useState([]);
-  const [directory, setDirectory] = useState([]); // Added directory state
+  const [directory, setDirectory] = useState([]); 
   const [tab,      setTab]      = useState('listings');
   
   // News Form State
@@ -38,7 +38,6 @@ export default function AdminPage() {
 
   async function load() {
     try {
-      // Added fetch for directory
       const [s, l, u, r, dir] = await Promise.all([
         api.get('/admin/stats'),
         api.get('/admin/listings'),
@@ -50,7 +49,7 @@ export default function AdminPage() {
       setListings(l);
       setUsers(u);
       setReviews(r);
-      setDirectory(dir); // Set directory data
+      setDirectory(dir); 
     } catch (e) {
       console.error(e);
       if (e.message.toLowerCase().includes('admin') || e.message.includes('token')) {
@@ -359,15 +358,22 @@ export default function AdminPage() {
               <input required value={dirForm.name} onChange={(e) => setDirForm({ ...dirForm, name: e.target.value })} />
             </div>
             
+            {/* UPDATED: Custom Category Input */}
             <div className="form-row">
               <label>Category *</label>
-              <select value={dirForm.category} onChange={(e) => setDirForm({ ...dirForm, category: e.target.value })}>
-                <option value="MRI Manufacturer">MRI Manufacturer</option>
-                <option value="MRI Repair Companies">MRI Repair Companies</option>
-                <option value="CT Repair and sale Companies">CT Repair and sale Companies</option>
-                <option value="Hospitals">Hospitals</option>
-                <option value="Imaging Centres">Imaging Centres</option>
-              </select>
+              <input 
+                list="directory-category-options"
+                value={dirForm.category} 
+                onChange={(e) => setDirForm({ ...dirForm, category: e.target.value })}
+                placeholder="Select or type a new category"
+              />
+              <datalist id="directory-category-options">
+                <option value="MRI Manufacturer" />
+                <option value="MRI Repair Companies" />
+                <option value="CT Repair and sale Companies" />
+                <option value="Hospitals" />
+                <option value="Imaging Centres" />
+              </datalist>
             </div>
 
             <div className="form-row">
