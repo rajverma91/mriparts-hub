@@ -17,17 +17,17 @@ export default function SellerCard({ seller }) {
     <div className="card" style={{ padding: 20, marginTop: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>MRI Parts Hub</div>
+          <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>SELLER</div>
           {sellerId ? (
             <Link
               href={`/sellers/${sellerId}`}
               style={{ fontWeight: 700, fontSize: 18, color: '#111827' }}
             >
-              {seller.seller_company || seller.seller_name}
+              {/* {seller.seller_company || seller.seller_name} */}MRI Parts Hub
             </Link>
           ) : (
             <div style={{ fontWeight: 700, fontSize: 18 }}>
-              {seller.seller_company || seller.seller_name}
+              {/* {seller.seller_company || seller.seller_name} */}MRI Parts Hub
             </div>
           )}
           {seller.seller_company && (
@@ -101,7 +101,7 @@ export default function SellerCard({ seller }) {
             fontWeight: 600
           }}
         >
-          View MRI Parts Hub profile →
+          View seller profile →
         </Link>
       )}
     </div>
