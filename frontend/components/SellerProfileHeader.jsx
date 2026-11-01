@@ -25,7 +25,7 @@ export default function SellerProfileHeader({ seller }) {
 
           <div style={{ flex: 1, minWidth: 240, paddingBottom: 6 }}>
             <h1 style={{ fontSize: 26, marginBottom: 4 }}>
-              {seller.company || seller.name}
+              {/* {seller.company || seller.name} */} MRI Parts Hub
             </h1>
             {seller.company && (
               <div style={{ color: '#6b7280', fontSize: 14 }}>{seller.name}</div>
