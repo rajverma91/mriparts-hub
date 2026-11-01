@@ -4,6 +4,9 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   color: #111827; background: #f7f8fa; line-height: 1.5;
 }
+html {
+  scroll-behavior: smooth; /* <-- ADD THIS LINE */
+}
 a { color: inherit; text-decoration: none; }
 button { cursor: pointer; font: inherit; }
 input, select, textarea {
@@ -601,7 +604,19 @@ input, select, textarea {
   z-index: 100;
   animation: fadeIn 0.15s ease-in-out;
 }
+/* ─────── DOCUMENTATION SIDEBAR ─────── */
+.doc-link {
+  font-size: 13px;
+  color: #6b7280;
+  text-decoration: none;
+  display: block;
+  line-height: 1.4;
+  transition: color 0.15s ease;
+}
 
+.doc-link:hover {
+  color: #0d6efd;
+}
 .nav-dropdown-item {
   display: block;
   padding: 10px 20px;

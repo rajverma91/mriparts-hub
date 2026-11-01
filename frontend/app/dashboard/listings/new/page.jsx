@@ -51,6 +51,8 @@ export default function NewListing() {
       await api.post('/listings', {
         ...form,
         image_url: form.gallery_json[0] || null,
+        // If it's a "buy" request, force the price to 0
+        price: form.advert_type === 'buy' ? 0 : form.price,
       });
       
       toast.success('Listing submitted for review!', { id: toastId });
@@ -122,17 +124,23 @@ export default function NewListing() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          <div className="form-row">
-            <label>Price</label>
-            <input type="number" value={form.price} onChange={(e) => update('price', e.target.value)} />
-          </div>
+          
+          {/* HIDE PRICE AND CURRENCY IF ADVERT TYPE IS 'BUY' */}
+          {form.advert_type !== 'buy' && (
+            <>
+              <div className="form-row">
+                <label>Price</label>
+                <input type="number" value={form.price} onChange={(e) => update('price', e.target.value)} />
+              </div>
 
-          <div className="form-row">
-            <label>Currency</label>
-            <select value={form.currency} onChange={(e) => update('currency', e.target.value)}>
-              <option>USD</option><option>EUR</option><option>GBP</option><option>INR</option>
-            </select>
-          </div>
+              <div className="form-row">
+                <label>Currency</label>
+                <select value={form.currency} onChange={(e) => update('currency', e.target.value)}>
+                  <option>USD</option><option>EUR</option><option>GBP</option><option>INR</option>
+                </select>
+              </div>
+            </>
+          )}
 
           <div className="form-row">
             <label>Condition</label>

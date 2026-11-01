@@ -148,7 +148,7 @@ export default function Footer() {
           <div>© {year} MRI Parts Hub. All rights reserved.</div>
           <div style={{ display: 'flex', gap: 24 }}>
             <Link href="/privacy-policy" style={{ color: '#64748b' }}>Privacy Policy</Link>
-            <Link href="/agreements" style={{ color: '#64748b' }}>Terms of Service</Link>
+            <Link href="/terms-of-service" style={{ color: '#64748b' }}>Terms of Service</Link>
             <Link href="/sitemap" style={{ color: '#64748b' }}>Sitemap</Link>
           </div>
         </div>
