@@ -17,7 +17,7 @@ export default function SellerCard({ seller }) {
     <div className="card" style={{ padding: 20, marginTop: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>SELLER</div>
+          <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>MRI Parts Hub</div>
           {sellerId ? (
             <Link
               href={`/sellers/${sellerId}`}
@@ -101,7 +101,7 @@ export default function SellerCard({ seller }) {
             fontWeight: 600
           }}
         >
-          View seller profile →
+          View MRI Parts Hub profile →
         </Link>
       )}
     </div>
