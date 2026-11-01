@@ -8,7 +8,7 @@ const LINKS = [
   { href: '/faq', label: "FAQ's" },
   { href: '/news', label: 'News & Blog' },
   { href: '/upcoming-events', label: 'Upcoming Events' },
-  { href: '/privacy-policy', label: 'Privacy Policy' },
+  // { href: '/privacy-policy', label: 'Privacy Policy' },
 ];
 
 const CATEGORIES = [
@@ -147,7 +147,7 @@ export default function Footer() {
         <div className="container" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
           <div>© {year} MRI Parts Hub. All rights reserved.</div>
           <div style={{ display: 'flex', gap: 24 }}>
-            <Link href="/privacy-policy" style={{ color: '#64748b' }}>Privacy Policy</Link>
+            {/* <Link href="/privacy-policy" style={{ color: '#64748b' }}>Privacy Policy</Link> */}
             <Link href="/terms-of-service" style={{ color: '#64748b' }}>Terms of Service</Link>
             <Link href="/sitemap" style={{ color: '#64748b' }}>Sitemap</Link>
           </div>
