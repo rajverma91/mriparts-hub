@@ -12,6 +12,7 @@ import InquiryForm      from '@/components/InquiryForm';
 import SaveButton       from '@/components/SaveButton';
 import SavedCountBadge  from '@/components/SavedCountBadge';
 import { parseGallery } from '@/lib/parseGallery';
+import ListingPrice from '@/components/ListingPrice';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -136,11 +137,7 @@ export default async function ListingDetail({ params }) {
             {item.city && <> · {item.city}</>}
           </div>
 
-          <div style={{ fontSize: 32, color: '#0d6efd', fontWeight: 800, margin: '10px 0' }}>
-  {Number(item.price) > 0 
-    ? `${item.currency} ${Number(item.price).toLocaleString()}` 
-    : 'Request Quote'}
-</div>
+        <ListingPrice item={item} />
 
           <div style={{ marginBottom: 10 }}>
             <SavedCountBadge listingId={id} />
