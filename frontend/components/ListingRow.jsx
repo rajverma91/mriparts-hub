@@ -58,8 +58,10 @@ export default function ListingRow({ item, isTop }) {
         </div>
 
         <div className="listing-row-price">
-          {item.currency} {Number(item.price || 0).toLocaleString()}
-        </div>
+  {Number(item.price) > 0 
+    ? `${item.currency} ${Number(item.price).toLocaleString()}` 
+    : 'Request Quote'}
+</div>
       </div>
 
       <div className="listing-row-side">

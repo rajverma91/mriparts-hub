@@ -8,7 +8,6 @@ import MultiImageUpload from '@/components/MultiImageUpload';
 import toast from 'react-hot-toast';
 import 'react-quill/dist/quill.snow.css';
 
-// Dynamically import ReactQuill to avoid SSR issues
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 export default function NewListing() {
@@ -51,7 +50,7 @@ export default function NewListing() {
       await api.post('/listings', {
         ...form,
         image_url: form.gallery_json[0] || null,
-        // If it's a "buy" request, force the price to 0
+        // Force price to 0 if it's a Buy request
         price: form.advert_type === 'buy' ? 0 : form.price,
       });
       
@@ -142,13 +141,20 @@ export default function NewListing() {
             </>
           )}
 
+          {/* UPDATED: Condition is now a text input with datalist */}
           <div className="form-row">
             <label>Condition</label>
-            <select value={form.condition_type} onChange={(e) => update('condition_type', e.target.value)}>
-              <option value="new">New</option>
-              <option value="used">Used</option>
-              <option value="refurbished">Refurbished</option>
-            </select>
+            <input 
+              list="condition-options" 
+              value={form.condition_type} 
+              onChange={(e) => update('condition_type', e.target.value)} 
+              placeholder="Select or type condition"
+            />
+            <datalist id="condition-options">
+              <option value="new" />
+              <option value="used" />
+              <option value="refurbished" />
+            </datalist>
           </div>
 
           <div className="form-row">

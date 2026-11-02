@@ -52,9 +52,11 @@ export default function ListingCard({ item }) {
             {item.brand && <>{item.brand} · </>}
             {item.country || '—'}
           </div>
-          <div className="price">
-            {item.currency} {Number(item.price || 0).toLocaleString()}
-          </div>
+         <div className="price">
+  {Number(item.price) > 0 
+    ? `${item.currency} ${Number(item.price).toLocaleString()}` 
+    : 'Request Quote'}
+</div>
         </div>
       </Link>
     </div>

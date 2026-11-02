@@ -137,8 +137,10 @@ export default async function ListingDetail({ params }) {
           </div>
 
           <div style={{ fontSize: 32, color: '#0d6efd', fontWeight: 800, margin: '10px 0' }}>
-            {item.currency} {Number(item.price || 0).toLocaleString()}
-          </div>
+  {Number(item.price) > 0 
+    ? `${item.currency} ${Number(item.price).toLocaleString()}` 
+    : 'Request Quote'}
+</div>
 
           <div style={{ marginBottom: 10 }}>
             <SavedCountBadge listingId={id} />
