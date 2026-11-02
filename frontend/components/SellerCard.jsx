@@ -57,9 +57,9 @@ export default function SellerCard({ seller }) {
         <span className="badge" style={{ background: '#dcfce7', color: '#166534' }}>
           ✓ Verified
         </span>
-        {seller.seller_country && (
+        {/* {seller.seller_country && (
           <span style={{ fontSize: 13, color: '#374151' }}>📍 {seller.seller_country}</span>
-        )}
+        )} */}
       </div>
 
       {/* <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
