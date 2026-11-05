@@ -223,7 +223,7 @@ export default function EditListing() {
         </div>
 
         <div className="form-row" style={{ marginTop: 24 }}>
-          <label>Photos</label>
+          <label>Photos</label> 
           <MultiImageUpload
             images={form.gallery_json}
             onChange={(urls) => update('gallery_json', urls)}
