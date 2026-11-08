@@ -4,9 +4,8 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
-import 'react-quill-new/dist/quill.snow.css'; // Changed to react-quill-new
+import 'react-quill-new/dist/quill.snow.css';
 
-// Changed to react-quill-new
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 export default function AdminPage() {
@@ -60,12 +59,18 @@ export default function AdminPage() {
           const quill = quillRef.current.getEditor();
           const range = quill.getSelection(true) || { index: quill.getLength(), length: 0 };
           
-          // Insert the image as a block with the full Cloudinary URL
+          // 1. Insert the image into the editor UI
           quill.insertEmbed(range.index, 'image', data.url, 'user');
           
-          // Move cursor to the next line
+          // 2. Move cursor to the next line
           quill.insertText(range.index + 1, '\n');
           quill.setSelection(range.index + 2);
+
+          // 3. FORCE the React state to update with the new HTML
+          setTimeout(() => {
+            const html = quill.root.innerHTML;
+            setNewsForm(prev => ({ ...prev, content: html }));
+          }, 100);
         }
 
         toast.success('Image inserted!', { id: toastId });
@@ -74,7 +79,6 @@ export default function AdminPage() {
       }
     };
   };
-
   // SINGLE Quill Modules Configuration
   const quillModules = {
     toolbar: {

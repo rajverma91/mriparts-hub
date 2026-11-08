@@ -86,7 +86,6 @@ router.put('/:id', authRequired, adminRequired, upload.single('image'), async (r
     const { title, content, category_name, seo_title, seo_description, tags } = req.body;
     if (!title || !content) return res.status(400).json({ error: 'Title and content required' });
 
-    // Get existing record to keep old image if not replaced
     const [existing] = await pool.query('SELECT image_url, slug FROM news WHERE id=?', [req.params.id]);
     if (!existing.length) return res.status(404).json({ error: 'Not found' });
 
