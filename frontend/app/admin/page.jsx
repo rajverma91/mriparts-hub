@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { api } from '@/lib/api';
@@ -14,11 +14,14 @@ export default function AdminPage() {
   const [users,    setUsers]    = useState([]);
   const [reviews,  setReviews]  = useState([]);
   const [directory, setDirectory] = useState([]);
-  const [newsList, setNewsList] = useState([]); // Added news list state
+  const [newsList, setNewsList] = useState([]);
   const [tab,      setTab]      = useState('listings');
   
+  // Refs
+  const quillRef = useRef(null);
+
   // News Form State
-  const [editingNewsId, setEditingNewsId] = useState(null); // Tracks if we are editing
+  const [editingNewsId, setEditingNewsId] = useState(null); 
   const [newsForm, setNewsForm] = useState({ 
     title: '', content: '', imageFile: null,
     category_name: 'Industry News', seo_title: '', seo_description: '', tags: ''
@@ -29,6 +32,60 @@ export default function AdminPage() {
     name: '', category: 'MRI Manufacturer', website: '', phone: '', phone2: '', location: '', logoFile: null 
   });
 
+  // Custom Image Handler for Quill (Uploads and inserts inline image)
+  const imageHandler = () => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const toastId = toast.loading('Uploading inline image...');
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData
+        });
+
+        if (!res.ok) throw new Error('Upload failed');
+        const data = await res.json();
+
+        // Insert the image URL into the editor at the cursor position
+        const quill = quillRef.current.getEditor();
+        const range = quill.getSelection(true);
+        quill.insertEmbed(range.index, 'image', data.url);
+        
+        toast.success('Image inserted!', { id: toastId });
+      } catch (err) {
+        toast.error(err.message || 'Failed to upload image', { id: toastId });
+      }
+    };
+  };
+
+  // Quill Modules Configuration
+  const quillModules = {
+    toolbar: {
+      container: [
+        [{ header: [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['link', 'image'], // 'image' triggers our custom handler
+        ['clean']
+      ],
+      handlers: {
+        image: imageHandler
+      }
+    }
+  };
+
   async function load() {
     try {
       const [s, l, u, r, dir, news] = await Promise.all([
@@ -37,7 +94,7 @@ export default function AdminPage() {
         api.get('/admin/users'),
         api.get('/reviews/admin/all'),
         api.get('/directory'),
-        api.get('/news') // Fetch all news
+        api.get('/news')
       ]);
       setStats(s);
       setListings(l);
@@ -94,7 +151,6 @@ export default function AdminPage() {
       const url = editingNewsId 
         ? `${process.env.NEXT_PUBLIC_API_URL}/news/${editingNewsId}` 
         : `${process.env.NEXT_PUBLIC_API_URL}/news`;
-      
       const method = editingNewsId ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
@@ -107,7 +163,7 @@ export default function AdminPage() {
 
       toast.success(editingNewsId ? 'News updated!' : 'News post created!', { id: toastId });
       resetNewsForm();
-      load(); // Refresh news list
+      load(); 
     } catch (err) {
       toast.error(err.message, { id: toastId });
     }
@@ -119,14 +175,14 @@ export default function AdminPage() {
       setNewsForm({
         title: res.title,
         content: res.content,
-        imageFile: null, // File must be re-selected if they want to change it
+        imageFile: null,
         category_name: res.category,
         seo_title: res.seo_title || '',
         seo_description: res.seo_description || '',
         tags: res.tags || ''
       });
       setEditingNewsId(id);
-      window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to form
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
       toast.error(e.message);
     }
@@ -144,6 +200,7 @@ export default function AdminPage() {
   }
   // ──────────────────────────
 
+  // Directory Functions
   async function createDirectory(e) {
     e.preventDefault();
     const toastId = toast.loading('Adding to directory...');
@@ -188,7 +245,6 @@ export default function AdminPage() {
     <div className="container" style={{ padding: '30px 20px' }}>
       <h1>Admin Dashboard</h1>
 
-      {/* ... Stats blocks and Tab buttons ... */}
       <div className="grid grid-4" style={{ marginTop: 20 }}>
         <div className="card" style={{ padding: 20 }}><b>Users</b><div style={{ fontSize: 28 }}>{stats.users}</div></div>
         <div className="card" style={{ padding: 20 }}><b>Listings</b><div style={{ fontSize: 28 }}>{stats.listings}</div></div>
@@ -209,11 +265,10 @@ export default function AdminPage() {
         <button className={`btn ${tab !== 'directory' ? 'btn-outline' : ''}`} onClick={() => setTab('directory')}>Directory</button>
       </div>
 
-      {/* LISTINGS TAB (Keep as is) */}
+      {/* LISTINGS TAB */}
       {tab === 'listings' && (
         <div className="card" style={{ padding: 20, marginTop: 14, overflowX: 'auto' }}>
-           {/* ... existing listings table ... */}
-           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr style={{ textAlign: 'left' }}>
               <th style={{ padding: 8 }}>Title</th><th style={{ padding: 8 }}>Seller</th><th style={{ padding: 8 }}>Status</th><th style={{ padding: 8 }}>Actions</th>
             </tr></thead>
@@ -248,7 +303,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* REVIEWS TAB (Keep as is) */}
+      {/* REVIEWS TAB */}
       {tab === 'reviews' && (
         <div className="card" style={{ padding: 20, marginTop: 14 }}>
           {reviews.length === 0 && <p>No reviews yet.</p>}
@@ -269,7 +324,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* USERS TAB (Keep as is) */}
+      {/* USERS TAB */}
       {tab === 'users' && (
         <div className="card" style={{ padding: 20, marginTop: 14, overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -287,7 +342,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* NEWS TAB (UPDATED WITH LIST AND EDIT/DELETE) */}
+      {/* NEWS TAB */}
       {tab === 'news' && (
         <>
           <div className="card" style={{ padding: 24, marginTop: 14, marginBottom: 24 }}>
@@ -306,7 +361,14 @@ export default function AdminPage() {
                 <div className="form-row">
                   <label>Post Content</label>
                   <div style={{ background: '#fff', minHeight: 400, marginBottom: 50 }}>
-                    <ReactQuill theme="snow" value={newsForm.content} onChange={(content) => setNewsForm({ ...newsForm, content })} style={{ height: 350 }} />
+                    <ReactQuill 
+                      ref={quillRef}
+                      theme="snow" 
+                      value={newsForm.content} 
+                      onChange={(content) => setNewsForm({ ...newsForm, content })} 
+                      modules={quillModules}
+                      style={{ height: 350 }} 
+                    />
                   </div>
                 </div>
               </div>
@@ -340,9 +402,9 @@ export default function AdminPage() {
                   </div>
                 </div>
                 <div className="card" style={{ padding: 20 }}>
-                  <h4 style={{ marginBottom: 16 }}>Featured Image</h4>
+                  <h4 style={{ marginBottom: 16 }}>Featured Image (Cover)</h4>
                   <input type="file" accept="image/*" onChange={(e) => setNewsForm({ ...newsForm, imageFile: e.target.files[0] })} style={{ padding: '8px 0', width: '100%' }} />
-                  {editingNewsId && <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>Leave blank to keep existing image.</p>}
+                  {editingNewsId && <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>Leave blank to keep existing cover image.</p>}
                 </div>
               </div>
             </form>
@@ -376,13 +438,13 @@ export default function AdminPage() {
         </>
       )}
 
-      {/* DIRECTORY TAB (Keep as is) */}
+      {/* DIRECTORY TAB */}
       {tab === 'directory' && (
         <div className="card" style={{ padding: 24, marginTop: 14 }}>
           <h3 style={{ marginBottom: 20 }}>Add Company to Directory</h3>
+          
           <form onSubmit={createDirectory} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 40 }}>
-             {/* ... existing directory form fields ... */}
-             <div className="form-row">
+            <div className="form-row">
               <label>Company Name *</label>
               <input required value={dirForm.name} onChange={(e) => setDirForm({ ...dirForm, name: e.target.value })} />
             </div>
