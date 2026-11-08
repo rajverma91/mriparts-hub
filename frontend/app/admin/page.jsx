@@ -17,22 +17,19 @@ export default function AdminPage() {
   const [newsList, setNewsList] = useState([]);
   const [tab,      setTab]      = useState('listings');
   
-  // Refs
   const quillRef = useRef(null);
 
-  // News Form State
   const [editingNewsId, setEditingNewsId] = useState(null); 
   const [newsForm, setNewsForm] = useState({ 
     title: '', content: '', imageFile: null,
     category_name: 'Industry News', seo_title: '', seo_description: '', tags: ''
   });
 
-  // Directory Form State
   const [dirForm, setDirForm] = useState({ 
     name: '', category: 'MRI Manufacturer', website: '', phone: '', phone2: '', location: '', logoFile: null 
   });
 
-  // Custom Image Handler for Quill (Uploads and inserts inline image)
+  // Safe Image Handler
   const imageHandler = () => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
@@ -46,7 +43,7 @@ export default function AdminPage() {
       const formData = new FormData();
       formData.append('image', file);
 
-      const toastId = toast.loading('Uploading inline image...');
+      const toastId = toast.loading('Uploading image...');
       try {
         const token = localStorage.getItem('token');
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
@@ -58,24 +55,15 @@ export default function AdminPage() {
         if (!res.ok) throw new Error('Upload failed');
         const data = await res.json();
 
-               // Insert the image URL into the editor at the cursor position
-        const quill = quillRef.current.getEditor();
-        
-        // 1. Focus the editor first to ensure it has a valid selection
-        quill.focus();
-        
-        // 2. Get the current range, fallback to the end of the document if null
-        let range = quill.getSelection();
-        if (!range) {
-          range = { index: quill.getLength(), length: 0 };
+        if (quillRef.current) {
+          const quill = quillRef.current.getEditor();
+          const range = quill.getSelection(true) || { index: quill.getLength(), length: 0 };
+          quill.clipboard.dangerouslyPasteHTML(
+            range.index, 
+            `<img src="${data.url}" alt="uploaded" style="max-width:100%; border-radius:8px;" />`
+          );
         }
 
-        // 3. Insert the image
-        quill.insertEmbed(range.index, 'image', data.url);
-        
-        // 4. Move the cursor after the image
-        quill.setSelection(range.index + 1);
-        
         toast.success('Image inserted!', { id: toastId });
       } catch (err) {
         toast.error(err.message || 'Failed to upload image', { id: toastId });
@@ -83,19 +71,15 @@ export default function AdminPage() {
     };
   };
 
-  // Quill Modules Configuration
+  // SINGLE Quill Modules Configuration
   const quillModules = {
     toolbar: {
       container: [
         [{ header: [1, 2, 3, false] }],
         ['bold', 'italic', 'underline', 'strike'],
         [{ list: 'ordered' }, { list: 'bullet' }],
-        ['link', 'image'], // 'image' triggers our custom handler
-        ['clean']
-      ],
-      handlers: {
-        image: imageHandler
-      }
+        ['link', 'clean'] 
+      ]
     }
   };
 
@@ -140,7 +124,6 @@ export default function AdminPage() {
     load();
   }
 
-  // ─────── NEWS CRUD ───────
   function resetNewsForm() {
     setEditingNewsId(null);
     setNewsForm({ title: '', content: '', imageFile: null, category_name: 'Industry News', seo_title: '', seo_description: '', tags: '' });
@@ -211,9 +194,7 @@ export default function AdminPage() {
       toast.error(e.message);
     }
   }
-  // ──────────────────────────
 
-  // Directory Functions
   async function createDirectory(e) {
     e.preventDefault();
     const toastId = toast.loading('Adding to directory...');
@@ -278,7 +259,6 @@ export default function AdminPage() {
         <button className={`btn ${tab !== 'directory' ? 'btn-outline' : ''}`} onClick={() => setTab('directory')}>Directory</button>
       </div>
 
-      {/* LISTINGS TAB */}
       {tab === 'listings' && (
         <div className="card" style={{ padding: 20, marginTop: 14, overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -316,7 +296,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* REVIEWS TAB */}
       {tab === 'reviews' && (
         <div className="card" style={{ padding: 20, marginTop: 14 }}>
           {reviews.length === 0 && <p>No reviews yet.</p>}
@@ -337,7 +316,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* USERS TAB */}
       {tab === 'users' && (
         <div className="card" style={{ padding: 20, marginTop: 14, overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -355,7 +333,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* NEWS TAB */}
       {tab === 'news' && (
         <>
           <div className="card" style={{ padding: 24, marginTop: 14, marginBottom: 24 }}>
@@ -372,7 +349,12 @@ export default function AdminPage() {
                   <input required value={newsForm.title} onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} placeholder="Enter post title here..." style={{ fontSize: 24, padding: 12, fontWeight: 600 }} />
                 </div>
                 <div className="form-row">
-                  <label>Post Content</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <label>Post Content</label>
+                    <button type="button" onClick={imageHandler} className="btn btn-outline" style={{ padding: '4px 12px', fontSize: 13 }}>
+                      + Insert Image
+                    </button>
+                  </div>
                   <div style={{ background: '#fff', minHeight: 400, marginBottom: 50 }}>
                     <ReactQuill 
                       ref={quillRef}
@@ -423,7 +405,6 @@ export default function AdminPage() {
             </form>
           </div>
 
-          {/* Existing News List */}
           <div className="card" style={{ padding: 24 }}>
             <h3 style={{ marginBottom: 16 }}>All Published News ({newsList.length})</h3>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -451,7 +432,6 @@ export default function AdminPage() {
         </>
       )}
 
-      {/* DIRECTORY TAB */}
       {tab === 'directory' && (
         <div className="card" style={{ padding: 24, marginTop: 14 }}>
           <h3 style={{ marginBottom: 20 }}>Add Company to Directory</h3>

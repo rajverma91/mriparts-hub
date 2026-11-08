@@ -25,12 +25,11 @@ export default async function SingleNewsPage({ params }) {
         <img src={post.image_url} alt={post.title} style={{ width: '100%', borderRadius: 12, marginBottom: 24 }} />
       )}
 
-      {/* RENDER HTML SAFELY */}
-      <div 
-        className="ql-editor" // Quill classes for list styles
-        style={{ padding: 0, lineHeight: 1.8, color: '#374151', fontSize: 16 }}
-        dangerouslySetInnerHTML={{ __html: post.content }} 
-      />
+     <div 
+  className="ql-editor" 
+  style={{ padding: 0, lineHeight: 1.8, color: '#374151', fontSize: 16 }}
+  dangerouslySetInnerHTML={{ __html: post.content }} 
+/>
     </div>
   );
 }
