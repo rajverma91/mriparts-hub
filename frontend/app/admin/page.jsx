@@ -4,9 +4,10 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
-import 'react-quill/dist/quill.snow.css';
+import 'react-quill-new/dist/quill.snow.css'; // Changed to react-quill-new
 
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
+// Changed to react-quill-new
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 export default function AdminPage() {
   const [stats,    setStats]    = useState(null);
@@ -58,10 +59,13 @@ export default function AdminPage() {
         if (quillRef.current) {
           const quill = quillRef.current.getEditor();
           const range = quill.getSelection(true) || { index: quill.getLength(), length: 0 };
-          quill.clipboard.dangerouslyPasteHTML(
-            range.index, 
-            `<img src="${data.url}" alt="uploaded" style="max-width:100%; border-radius:8px;" />`
-          );
+          
+          // Insert the image as a block with the full Cloudinary URL
+          quill.insertEmbed(range.index, 'image', data.url, 'user');
+          
+          // Move cursor to the next line
+          quill.insertText(range.index + 1, '\n');
+          quill.setSelection(range.index + 2);
         }
 
         toast.success('Image inserted!', { id: toastId });
