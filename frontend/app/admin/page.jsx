@@ -13,44 +13,38 @@ export default function AdminPage() {
   const [listings, setListings] = useState([]);
   const [users,    setUsers]    = useState([]);
   const [reviews,  setReviews]  = useState([]);
-  const [directory, setDirectory] = useState([]); 
+  const [directory, setDirectory] = useState([]);
+  const [newsList, setNewsList] = useState([]); // Added news list state
   const [tab,      setTab]      = useState('listings');
   
   // News Form State
+  const [editingNewsId, setEditingNewsId] = useState(null); // Tracks if we are editing
   const [newsForm, setNewsForm] = useState({ 
-    title: '', 
-    content: '', 
-    imageFile: null,
-    category_name: 'Industry News',
-    seo_title: '',
-    seo_description: '',
-    tags: ''
+    title: '', content: '', imageFile: null,
+    category_name: 'Industry News', seo_title: '', seo_description: '', tags: ''
   });
 
- const [dirForm, setDirForm] = useState({ 
-  name: '', 
-  category: 'MRI Manufacturer', 
-  website: '', 
-  phone: '', 
-  phone2: '', // Added
-  location: '',
-  logoFile: null // Added
-});
+  // Directory Form State
+  const [dirForm, setDirForm] = useState({ 
+    name: '', category: 'MRI Manufacturer', website: '', phone: '', phone2: '', location: '', logoFile: null 
+  });
 
   async function load() {
     try {
-      const [s, l, u, r, dir] = await Promise.all([
+      const [s, l, u, r, dir, news] = await Promise.all([
         api.get('/admin/stats'),
         api.get('/admin/listings'),
         api.get('/admin/users'),
         api.get('/reviews/admin/all'),
-        api.get('/directory')
+        api.get('/directory'),
+        api.get('/news') // Fetch all news
       ]);
       setStats(s);
       setListings(l);
       setUsers(u);
       setReviews(r);
-      setDirectory(dir); 
+      setDirectory(dir);
+      setNewsList(news);
     } catch (e) {
       console.error(e);
       if (e.message.toLowerCase().includes('admin') || e.message.includes('token')) {
@@ -76,9 +70,15 @@ export default function AdminPage() {
     load();
   }
 
-  async function createNews(e) {
+  // ─────── NEWS CRUD ───────
+  function resetNewsForm() {
+    setEditingNewsId(null);
+    setNewsForm({ title: '', content: '', imageFile: null, category_name: 'Industry News', seo_title: '', seo_description: '', tags: '' });
+  }
+
+  async function handleNewsSubmit(e) {
     e.preventDefault();
-    const toastId = toast.loading('Publishing post...');
+    const toastId = toast.loading(editingNewsId ? 'Updating post...' : 'Publishing post...');
     
     try {
       const formData = new FormData();
@@ -88,63 +88,91 @@ export default function AdminPage() {
       formData.append('seo_title', newsForm.seo_title);
       formData.append('seo_description', newsForm.seo_description);
       formData.append('tags', newsForm.tags);
-      
-      if (newsForm.imageFile) {
-        formData.append('image', newsForm.imageFile);
-      }
+      if (newsForm.imageFile) formData.append('image', newsForm.imageFile);
 
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news`, {
-        method: 'POST',
+      const url = editingNewsId 
+        ? `${process.env.NEXT_PUBLIC_API_URL}/news/${editingNewsId}` 
+        : `${process.env.NEXT_PUBLIC_API_URL}/news`;
+      
+      const method = editingNewsId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { Authorization: `Bearer ${token}` },
         body: formData
       });
 
-      if (!res.ok) throw new Error('Failed to create post');
+      if (!res.ok) throw new Error('Failed to save post');
 
-      toast.success('News post created!', { id: toastId });
-      setNewsForm({ 
-        title: '', content: '', imageFile: null, 
-        category_name: 'Industry News', seo_title: '', seo_description: '', tags: '' 
-      });
+      toast.success(editingNewsId ? 'News updated!' : 'News post created!', { id: toastId });
+      resetNewsForm();
+      load(); // Refresh news list
     } catch (err) {
       toast.error(err.message, { id: toastId });
     }
   }
 
-  // Directory Functions
- async function createDirectory(e) {
-  e.preventDefault();
-  const toastId = toast.loading('Adding to directory...');
-  
-  try {
-    const formData = new FormData();
-    formData.append('name', dirForm.name);
-    formData.append('category', dirForm.category);
-    formData.append('location', dirForm.location);
-    formData.append('phone', dirForm.phone);
-    formData.append('phone2', dirForm.phone2);
-    formData.append('website', dirForm.website);
-    if (dirForm.logoFile) {
-      formData.append('logo', dirForm.logoFile);
+  async function editNews(id) {
+    try {
+      const res = await api.get(`/news/admin/${id}`);
+      setNewsForm({
+        title: res.title,
+        content: res.content,
+        imageFile: null, // File must be re-selected if they want to change it
+        category_name: res.category,
+        seo_title: res.seo_title || '',
+        seo_description: res.seo_description || '',
+        tags: res.tags || ''
+      });
+      setEditingNewsId(id);
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to form
+    } catch (e) {
+      toast.error(e.message);
     }
-
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/directory`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData
-    });
-
-    if (!res.ok) throw new Error('Failed to add directory entry');
-
-    toast.success('Directory entry added!', { id: toastId });
-    setDirForm({ name: '', category: 'MRI Manufacturer', website: '', phone: '', phone2: '', location: '', logoFile: null });
-    load();
-  } catch (err) {
-    toast.error(err.message, { id: toastId });
   }
-}
+
+  async function deleteNews(id) {
+    if (!confirm('Delete this news post permanently?')) return;
+    try {
+      await api.del(`/news/${id}`);
+      toast.success('Deleted');
+      load();
+    } catch (e) {
+      toast.error(e.message);
+    }
+  }
+  // ──────────────────────────
+
+  async function createDirectory(e) {
+    e.preventDefault();
+    const toastId = toast.loading('Adding to directory...');
+    try {
+      const formData = new FormData();
+      formData.append('name', dirForm.name);
+      formData.append('category', dirForm.category);
+      formData.append('location', dirForm.location);
+      formData.append('phone', dirForm.phone);
+      formData.append('phone2', dirForm.phone2);
+      formData.append('website', dirForm.website);
+      if (dirForm.logoFile) formData.append('logo', dirForm.logoFile);
+
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/directory`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+
+      if (!res.ok) throw new Error('Failed to add directory entry');
+
+      toast.success('Directory entry added!', { id: toastId });
+      setDirForm({ name: '', category: 'MRI Manufacturer', website: '', phone: '', phone2: '', location: '', logoFile: null });
+      load();
+    } catch (err) {
+      toast.error(err.message, { id: toastId });
+    }
+  }
 
   async function deleteDirectory(id) {
     if (!confirm('Delete this directory entry?')) return;
@@ -160,6 +188,7 @@ export default function AdminPage() {
     <div className="container" style={{ padding: '30px 20px' }}>
       <h1>Admin Dashboard</h1>
 
+      {/* ... Stats blocks and Tab buttons ... */}
       <div className="grid grid-4" style={{ marginTop: 20 }}>
         <div className="card" style={{ padding: 20 }}><b>Users</b><div style={{ fontSize: 28 }}>{stats.users}</div></div>
         <div className="card" style={{ padding: 20 }}><b>Listings</b><div style={{ fontSize: 28 }}>{stats.listings}</div></div>
@@ -180,10 +209,11 @@ export default function AdminPage() {
         <button className={`btn ${tab !== 'directory' ? 'btn-outline' : ''}`} onClick={() => setTab('directory')}>Directory</button>
       </div>
 
-      {/* LISTINGS TAB */}
+      {/* LISTINGS TAB (Keep as is) */}
       {tab === 'listings' && (
         <div className="card" style={{ padding: 20, marginTop: 14, overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+           {/* ... existing listings table ... */}
+           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr style={{ textAlign: 'left' }}>
               <th style={{ padding: 8 }}>Title</th><th style={{ padding: 8 }}>Seller</th><th style={{ padding: 8 }}>Status</th><th style={{ padding: 8 }}>Actions</th>
             </tr></thead>
@@ -218,7 +248,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* REVIEWS TAB */}
+      {/* REVIEWS TAB (Keep as is) */}
       {tab === 'reviews' && (
         <div className="card" style={{ padding: 20, marginTop: 14 }}>
           {reviews.length === 0 && <p>No reviews yet.</p>}
@@ -239,7 +269,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* USERS TAB */}
+      {/* USERS TAB (Keep as is) */}
       {tab === 'users' && (
         <div className="card" style={{ padding: 20, marginTop: 14, overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -257,207 +287,158 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* NEWS TAB */}
+      {/* NEWS TAB (UPDATED WITH LIST AND EDIT/DELETE) */}
       {tab === 'news' && (
-        <div className="card" style={{ padding: 24, marginTop: 14 }}>
-          <h3 style={{ marginBottom: 20 }}>Add New Post</h3>
-          
-          <form onSubmit={createNews} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 30 }}>
-            
-            {/* LEFT COLUMN: Main Editor */}
-            <div>
-              <div className="form-row" style={{ marginBottom: 20 }}>
-                <input 
-                  required 
-                  value={newsForm.title} 
-                  onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} 
-                  placeholder="Enter post title here..." 
-                  style={{ fontSize: 24, padding: 12, fontWeight: 600 }}
-                />
-              </div>
-
-              {/* Rich Text Editor */}
-              <div className="form-row">
-                <label>Post Content</label>
-                <div style={{ background: '#fff', minHeight: 400, marginBottom: 50 }}>
-                  <ReactQuill 
-                    theme="snow" 
-                    value={newsForm.content} 
-                    onChange={(content) => setNewsForm({ ...newsForm, content })}
-                    style={{ height: 350 }}
-                  />
-                </div>
-              </div>
+        <>
+          <div className="card" style={{ padding: 24, marginTop: 14, marginBottom: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3>{editingNewsId ? 'Edit Post' : 'Add New Post'}</h3>
+              {editingNewsId && (
+                <button type="button" className="btn btn-outline" onClick={resetNewsForm}>+ Create New Post Instead</button>
+              )}
             </div>
-
-            {/* RIGHT COLUMN: Sidebar */}
-            <div>
-              {/* Publish Box */}
-              <div className="card" style={{ padding: 20, marginBottom: 20, background: '#f8fafc' }}>
-                <h4 style={{ marginBottom: 16 }}>Publish</h4>
-                <button className="btn" type="submit" style={{ width: '100%' }}>Publish Post</button>
-              </div>
-
-              {/* Categories Box */}
-              <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-                <h4 style={{ marginBottom: 16 }}>Category</h4>
-                <input 
-                  list="news-category-options"
-                  value={newsForm.category_name} 
-                  onChange={(e) => setNewsForm({ ...newsForm, category_name: e.target.value })}
-                  placeholder="Select or type a new category"
-                  style={{ width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4 }}
-                />
-                <datalist id="news-category-options">
-                  <option value="Industry News" />
-                  <option value="MRI Parts" />
-                  <option value="CT Parts" />
-                  <option value="MRI Safety" />
-                  <option value="Repairs & Maintenance" />
-                  <option value="Equipment Leasing" />
-                  <option value="Accessories" />
-                  <option value="Upcoming Events" />
-                </datalist>
-              </div>
-
-              {/* SEO Box */}
-              <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-                <h4 style={{ marginBottom: 16 }}>SEO Settings</h4>
-                <div className="form-row" style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 13 }}>SEO Title</label>
-                  <input 
-                    value={newsForm.seo_title} 
-                    onChange={(e) => setNewsForm({ ...newsForm, seo_title: e.target.value })}
-                    placeholder="Meta title tag"
-                    style={{ padding: 8 }}
-                  />
-                </div>
-                <div className="form-row" style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 13 }}>SEO Description</label>
-                  <textarea 
-                    value={newsForm.seo_description} 
-                    onChange={(e) => setNewsForm({ ...newsForm, seo_description: e.target.value })}
-                    placeholder="Meta description tag"
-                    rows={3}
-                    style={{ padding: 8, resize: 'vertical' }}
-                  />
+            
+            <form onSubmit={handleNewsSubmit} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 30 }}>
+              <div>
+                <div className="form-row" style={{ marginBottom: 20 }}>
+                  <input required value={newsForm.title} onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} placeholder="Enter post title here..." style={{ fontSize: 24, padding: 12, fontWeight: 600 }} />
                 </div>
                 <div className="form-row">
-                  <label style={{ fontSize: 13 }}>Tags</label>
-                  <input 
-                    value={newsForm.tags} 
-                    onChange={(e) => setNewsForm({ ...newsForm, tags: e.target.value })}
-                    placeholder="e.g. MRI, safety, parts"
-                    style={{ padding: 8 }}
-                  />
+                  <label>Post Content</label>
+                  <div style={{ background: '#fff', minHeight: 400, marginBottom: 50 }}>
+                    <ReactQuill theme="snow" value={newsForm.content} onChange={(content) => setNewsForm({ ...newsForm, content })} style={{ height: 350 }} />
+                  </div>
                 </div>
               </div>
-
-              {/* Featured Image Box */}
-              <div className="card" style={{ padding: 20 }}>
-                <h4 style={{ marginBottom: 16 }}>Featured Image</h4>
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={(e) => setNewsForm({ ...newsForm, imageFile: e.target.files[0] })}
-                  style={{ padding: '8px 0', width: '100%' }} 
-                />
+              <div>
+                <div className="card" style={{ padding: 20, marginBottom: 20, background: '#f8fafc' }}>
+                  <h4 style={{ marginBottom: 16 }}>Publish</h4>
+                  <button className="btn" type="submit" style={{ width: '100%' }}>{editingNewsId ? 'Update Post' : 'Publish Post'}</button>
+                </div>
+                <div className="card" style={{ padding: 20, marginBottom: 20 }}>
+                  <h4 style={{ marginBottom: 16 }}>Category</h4>
+                  <input list="news-category-options" value={newsForm.category_name} onChange={(e) => setNewsForm({ ...newsForm, category_name: e.target.value })} placeholder="Select or type a new category" style={{ width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4 }} />
+                  <datalist id="news-category-options">
+                    <option value="Industry News" /><option value="MRI Parts" /><option value="CT Parts" />
+                    <option value="MRI Safety" /><option value="Repairs & Maintenance" /><option value="Equipment Leasing" />
+                    <option value="Accessories" /><option value="Upcoming Events" />
+                  </datalist>
+                </div>
+                <div className="card" style={{ padding: 20, marginBottom: 20 }}>
+                  <h4 style={{ marginBottom: 16 }}>SEO Settings</h4>
+                  <div className="form-row" style={{ marginBottom: 12 }}>
+                    <label style={{ fontSize: 13 }}>SEO Title</label>
+                    <input value={newsForm.seo_title} onChange={(e) => setNewsForm({ ...newsForm, seo_title: e.target.value })} placeholder="Meta title tag" style={{ padding: 8 }} />
+                  </div>
+                  <div className="form-row" style={{ marginBottom: 12 }}>
+                    <label style={{ fontSize: 13 }}>SEO Description</label>
+                    <textarea value={newsForm.seo_description} onChange={(e) => setNewsForm({ ...newsForm, seo_description: e.target.value })} placeholder="Meta description tag" rows={3} style={{ padding: 8, resize: 'vertical' }} />
+                  </div>
+                  <div className="form-row">
+                    <label style={{ fontSize: 13 }}>Tags</label>
+                    <input value={newsForm.tags} onChange={(e) => setNewsForm({ ...newsForm, tags: e.target.value })} placeholder="e.g. MRI, safety, parts" style={{ padding: 8 }} />
+                  </div>
+                </div>
+                <div className="card" style={{ padding: 20 }}>
+                  <h4 style={{ marginBottom: 16 }}>Featured Image</h4>
+                  <input type="file" accept="image/*" onChange={(e) => setNewsForm({ ...newsForm, imageFile: e.target.files[0] })} style={{ padding: '8px 0', width: '100%' }} />
+                  {editingNewsId && <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>Leave blank to keep existing image.</p>}
+                </div>
               </div>
-            </div>
-          </form>
-        </div>
+            </form>
+          </div>
+
+          {/* Existing News List */}
+          <div className="card" style={{ padding: 24 }}>
+            <h3 style={{ marginBottom: 16 }}>All Published News ({newsList.length})</h3>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead><tr style={{ textAlign: 'left', borderBottom: '2px solid #eee' }}>
+                <th style={{ padding: 8 }}>Title</th>
+                <th style={{ padding: 8 }}>Category</th>
+                <th style={{ padding: 8 }}>Date</th>
+                <th style={{ padding: 8 }}>Actions</th>
+              </tr></thead>
+              <tbody>
+                {newsList.map((n) => (
+                  <tr key={n.id} style={{ borderTop: '1px solid #eee' }}>
+                    <td style={{ padding: 8, fontWeight: 600 }}>{n.title}</td>
+                    <td style={{ padding: 8 }}>{n.category}</td>
+                    <td style={{ padding: 8 }}>{new Date(n.created_at).toLocaleDateString()}</td>
+                    <td style={{ padding: 8 }}>
+                      <button className="btn btn-outline" style={{ padding: '4px 10px', marginRight: 4 }} onClick={() => editNews(n.id)}>Edit</button>
+                      <button className="btn btn-danger" style={{ padding: '4px 10px' }} onClick={() => deleteNews(n.id)}>Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
-      {/* DIRECTORY TAB */}
+      {/* DIRECTORY TAB (Keep as is) */}
       {tab === 'directory' && (
         <div className="card" style={{ padding: 24, marginTop: 14 }}>
           <h3 style={{ marginBottom: 20 }}>Add Company to Directory</h3>
-          
-       <form onSubmit={createDirectory} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 40 }}>
-  <div className="form-row">
-    <label>Company Name *</label>
-    <input required value={dirForm.name} onChange={(e) => setDirForm({ ...dirForm, name: e.target.value })} />
-  </div>
-  
-  <div className="form-row">
-    <label>Category *</label>
-    <input 
-      list="directory-category-options"
-      value={dirForm.category} 
-      onChange={(e) => setDirForm({ ...dirForm, category: e.target.value })}
-      placeholder="Select or type a new category"
-    />
-    <datalist id="directory-category-options">
-      <option value="MRI Manufacturer" />
-      <option value="MRI Repair Companies" />
-      <option value="CT Repair and sale Companies" />
-      <option value="Hospitals" />
-      <option value="Imaging Centres" />
-    </datalist>
-  </div>
+          <form onSubmit={createDirectory} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 40 }}>
+             {/* ... existing directory form fields ... */}
+             <div className="form-row">
+              <label>Company Name *</label>
+              <input required value={dirForm.name} onChange={(e) => setDirForm({ ...dirForm, name: e.target.value })} />
+            </div>
+            <div className="form-row">
+              <label>Category *</label>
+              <input list="directory-category-options" value={dirForm.category} onChange={(e) => setDirForm({ ...dirForm, category: e.target.value })} placeholder="Select or type a new category" />
+              <datalist id="directory-category-options">
+                <option value="MRI Manufacturer" /><option value="MRI Repair Companies" />
+                <option value="CT Repair and sale Companies" /><option value="Hospitals" /><option value="Imaging Centres" />
+              </datalist>
+            </div>
+            <div className="form-row">
+              <label>Location</label>
+              <input value={dirForm.location} onChange={(e) => setDirForm({ ...dirForm, location: e.target.value })} placeholder="City, Country" />
+            </div>
+            <div className="form-row">
+              <label>Primary Phone</label>
+              <input value={dirForm.phone} onChange={(e) => setDirForm({ ...dirForm, phone: e.target.value })} />
+            </div>
+            <div className="form-row">
+              <label>Secondary Phone (Optional)</label>
+              <input value={dirForm.phone2} onChange={(e) => setDirForm({ ...dirForm, phone2: e.target.value })} />
+            </div>
+            <div className="form-row">
+              <label>Website URL</label>
+              <input value={dirForm.website} onChange={(e) => setDirForm({ ...dirForm, website: e.target.value })} placeholder="https://..." />
+            </div>
+            <div className="form-row" style={{ gridColumn: '1 / -1' }}>
+              <label>Company Logo (Optional)</label>
+              <input type="file" accept="image/*" onChange={(e) => setDirForm({ ...dirForm, logoFile: e.target.files[0] })} style={{ padding: '8px 0' }} />
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <button className="btn">Add to Directory</button>
+            </div>
+          </form>
 
-  <div className="form-row">
-    <label>Location</label>
-    <input value={dirForm.location} onChange={(e) => setDirForm({ ...dirForm, location: e.target.value })} placeholder="City, Country" />
-  </div>
-
-  <div className="form-row">
-    <label>Primary Phone</label>
-    <input value={dirForm.phone} onChange={(e) => setDirForm({ ...dirForm, phone: e.target.value })} />
-  </div>
-
-  {/* Added Secondary Phone */}
-  <div className="form-row">
-    <label>Secondary Phone (Optional)</label>
-    <input value={dirForm.phone2} onChange={(e) => setDirForm({ ...dirForm, phone2: e.target.value })} />
-  </div>
-
-  <div className="form-row">
-    <label>Website URL</label>
-    <input value={dirForm.website} onChange={(e) => setDirForm({ ...dirForm, website: e.target.value })} placeholder="https://..." />
-  </div>
-
-  {/* Added Logo Upload */}
-  <div className="form-row" style={{ gridColumn: '1 / -1' }}>
-    <label>Company Logo (Optional)</label>
-    <input 
-      type="file" 
-      accept="image/*"
-      onChange={(e) => setDirForm({ ...dirForm, logoFile: e.target.files[0] })}
-      style={{ padding: '8px 0' }} 
-    />
-  </div>
-
-  <div style={{ gridColumn: '1 / -1' }}>
-    <button className="btn">Add to Directory</button>
-  </div>
-</form>
           <h3 style={{ marginBottom: 16 }}>Existing Directory Entries ({directory.length})</h3>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-         <thead><tr style={{ textAlign: 'left', borderBottom: '2px solid #eee' }}>
-  <th style={{ padding: 8 }}>Logo</th> {/* Added */}
-  <th style={{ padding: 8 }}>Name</th>
-  <th style={{ padding: 8 }}>Category</th>
-  <th style={{ padding: 8 }}>Location</th>
-  <th style={{ padding: 8 }}>Actions</th>
-</tr></thead>
-<tbody>
-  {directory.map((d) => (
-    <tr key={d.id} style={{ borderTop: '1px solid #eee' }}>
-      <td style={{ padding: 8 }}>
-        {d.logo_url ? (
-          <img src={d.logo_url} alt={d.name} style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 4 }} />
-        ) : '—'}
-      </td>
-      <td style={{ padding: 8, fontWeight: 600 }}>{d.name}</td>
-      <td style={{ padding: 8 }}>{d.category}</td>
-      <td style={{ padding: 8 }}>{d.location || '—'}</td>
-      <td style={{ padding: 8 }}>
-        <button className="btn btn-danger" style={{ padding: '4px 10px' }} onClick={() => deleteDirectory(d.id)}>Delete</button>
-      </td>
-    </tr>
-  ))}
-</tbody>
+            <thead><tr style={{ textAlign: 'left', borderBottom: '2px solid #eee' }}>
+              <th style={{ padding: 8 }}>Logo</th><th style={{ padding: 8 }}>Name</th><th style={{ padding: 8 }}>Category</th><th style={{ padding: 8 }}>Location</th><th style={{ padding: 8 }}>Actions</th>
+            </tr></thead>
+            <tbody>
+              {directory.map((d) => (
+                <tr key={d.id} style={{ borderTop: '1px solid #eee' }}>
+                  <td style={{ padding: 8 }}>
+                    {d.logo_url ? <img src={d.logo_url} alt={d.name} style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 4 }} /> : '—'}
+                  </td>
+                  <td style={{ padding: 8, fontWeight: 600 }}>{d.name}</td>
+                  <td style={{ padding: 8 }}>{d.category}</td>
+                  <td style={{ padding: 8 }}>{d.location || '—'}</td>
+                  <td style={{ padding: 8 }}>
+                    <button className="btn btn-danger" style={{ padding: '4px 10px' }} onClick={() => deleteDirectory(d.id)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       )}
