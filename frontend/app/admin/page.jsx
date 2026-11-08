@@ -58,10 +58,23 @@ export default function AdminPage() {
         if (!res.ok) throw new Error('Upload failed');
         const data = await res.json();
 
-        // Insert the image URL into the editor at the cursor position
+               // Insert the image URL into the editor at the cursor position
         const quill = quillRef.current.getEditor();
-        const range = quill.getSelection(true);
+        
+        // 1. Focus the editor first to ensure it has a valid selection
+        quill.focus();
+        
+        // 2. Get the current range, fallback to the end of the document if null
+        let range = quill.getSelection();
+        if (!range) {
+          range = { index: quill.getLength(), length: 0 };
+        }
+
+        // 3. Insert the image
         quill.insertEmbed(range.index, 'image', data.url);
+        
+        // 4. Move the cursor after the image
+        quill.setSelection(range.index + 1);
         
         toast.success('Image inserted!', { id: toastId });
       } catch (err) {
