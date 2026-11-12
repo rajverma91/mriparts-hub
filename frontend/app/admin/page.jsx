@@ -24,7 +24,7 @@ export default function AdminPage() {
     title: '', content: '', imageFile: null,
     category_name: 'Industry News', seo_title: '', seo_description: '', tags: ''
   });
-
+ 
   const [dirForm, setDirForm] = useState({ 
     name: '', category: 'MRI Manufacturer', website: '', phone: '', phone2: '', location: '', logoFile: null 
   });
