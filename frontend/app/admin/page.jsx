@@ -1,97 +1,166 @@
+
 'use client';
+
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
-import ReactQuill from "react-quill-new";
-import "react-quill-new/dist/quill.snow.css";
+import 'react-quill-new/dist/quill.snow.css';
 
-const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
+// Load ReactQuill only on the client
+const ReactQuill = dynamic(
+  () => import('react-quill-new'),
+  { ssr: false }
+);
 
 export default function AdminPage() {
-  const [stats,    setStats]    = useState(null);
+  const [stats, setStats] = useState(null);
   const [listings, setListings] = useState([]);
-  const [users,    setUsers]    = useState([]);
-  const [reviews,  setReviews]  = useState([]);
+  const [users, setUsers] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [directory, setDirectory] = useState([]);
   const [newsList, setNewsList] = useState([]);
-  const [tab,      setTab]      = useState('listings');
-  
+  const [tab, setTab] = useState('listings');
+
   const quillRef = useRef(null);
 
-  const [editingNewsId, setEditingNewsId] = useState(null); 
-  const [newsForm, setNewsForm] = useState({ 
-    title: '', content: '', imageFile: null,
-    category_name: 'Industry News', seo_title: '', seo_description: '', tags: ''
+  const [editingNewsId, setEditingNewsId] = useState(null);
+
+  const [newsForm, setNewsForm] = useState({
+    title: '',
+    content: '',
+    imageFile: null,
+    category_name: 'Industry News',
+    seo_title: '',
+    seo_description: '',
+    tags: ''
   });
- 
-  const [dirForm, setDirForm] = useState({ 
-    name: '', category: 'MRI Manufacturer', website: '', phone: '', phone2: '', location: '', logoFile: null 
+
+  const [dirForm, setDirForm] = useState({
+    name: '',
+    category: 'MRI Manufacturer',
+    website: '',
+    phone: '',
+    phone2: '',
+    location: '',
+    logoFile: null
   });
 
-  // Safe Image Handler
-  const imageHandler = () => {
-    const input = document.createElement('input');
-    input.setAttribute('type', 'file');
-    input.setAttribute('accept', 'image/*');
-    input.click();
-
-    input.onchange = async () => {
-      const file = input.files[0];
-      if (!file) return;
-
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const toastId = toast.loading('Uploading image...');
-      try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData
-        });
-
-        if (!res.ok) throw new Error('Upload failed');
-        const data = await res.json();
-
-        if (quillRef.current) {
-          const quill = quillRef.current.getEditor();
-          const range = quill.getSelection(true) || { index: quill.getLength(), length: 0 };
-          
-          // 1. Insert the image into the editor UI
-          quill.insertEmbed(range.index, 'image', data.url, 'user');
-          
-          // 2. Move cursor to the next line
-          quill.insertText(range.index + 1, '\n');
-          quill.setSelection(range.index + 2);
-
-          // 3. FORCE the React state to update with the new HTML
-          setTimeout(() => {
-            const html = quill.root.innerHTML;
-            setNewsForm(prev => ({ ...prev, content: html }));
-          }, 100);
-        }
-
-        toast.success('Image inserted!', { id: toastId });
-      } catch (err) {
-        toast.error(err.message || 'Failed to upload image', { id: toastId });
-      }
-    };
-  };
-  // SINGLE Quill Modules Configuration
+  // Quill toolbar configuration
   const quillModules = {
     toolbar: {
       container: [
         [{ header: [1, 2, 3, false] }],
         ['bold', 'italic', 'underline', 'strike'],
         [{ list: 'ordered' }, { list: 'bullet' }],
-        ['link', 'clean'] 
+        ['link', 'clean']
       ]
     }
   };
 
+  // Safe Image Upload and Insertion
+  const imageHandler = () => {
+    const input = document.createElement('input');
+
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const toastId = toast.loading('Uploading image...');
+
+      try {
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+          throw new Error('Authentication required. Please login again.');
+        }
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/upload`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`
+            },
+            body: formData
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error('Image upload failed');
+        }
+
+        const data = await res.json();
+
+        if (!data.url) {
+          throw new Error('Image URL not received from server');
+        }
+
+        if (!quillRef.current) {
+          throw new Error('Editor is not ready');
+        }
+
+        const quill = quillRef.current.getEditor();
+
+        const range = quill.getSelection(true) || {
+          index: quill.getLength() - 1,
+          length: 0
+        };
+
+        // Insert uploaded image
+        quill.insertEmbed(
+          range.index,
+          'image',
+          data.url,
+          'user'
+        );
+
+        // Insert new line after image
+        quill.insertText(
+          range.index + 1,
+          '\n',
+          'user'
+        );
+
+        // Move cursor after inserted image
+        quill.setSelection(
+          range.index + 2,
+          0,
+          'user'
+        );
+
+        // Synchronize editor content with React state
+        setNewsForm(prev => ({
+          ...prev,
+          content: quill.root.innerHTML
+        }));
+
+        toast.success('Image inserted successfully!', {
+          id: toastId
+        });
+
+      } catch (err) {
+        console.error('Image upload error:', err);
+
+        toast.error(
+          err.message || 'Failed to upload image',
+          { id: toastId }
+        );
+      }
+    };
+  };
+
+  // Load Admin Dashboard Data
   async function load() {
     try {
       const [s, l, u, r, dir, news] = await Promise.all([
@@ -102,410 +171,1257 @@ export default function AdminPage() {
         api.get('/directory'),
         api.get('/news')
       ]);
+
       setStats(s);
       setListings(l);
       setUsers(u);
       setReviews(r);
       setDirectory(dir);
       setNewsList(news);
+
     } catch (e) {
-      console.error(e);
-      if (e.message.toLowerCase().includes('admin') || e.message.includes('token')) {
+      console.error('Admin dashboard loading error:', e);
+
+      const message = (e.message || '').toLowerCase();
+
+      if (
+        message.includes('admin') ||
+        message.includes('token') ||
+        message.includes('unauthorized')
+      ) {
         window.location.href = '/login';
       }
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
+  // Listing Status
   async function setListingStatus(id, status) {
-    await api.patch(`/admin/listings/${id}/status`, { status });
-    load();
-  }
+    try {
+      await api.patch(`/admin/listings/${id}/status`, {
+        status
+      });
 
-  async function reviewAction(id, action) {
-    if (action === 'approve') await api.patch(`/reviews/${id}/approve`, {});
-    if (action === 'reject')  await api.patch(`/reviews/${id}/reject`, {});
-    if (action === 'delete') {
-      if (!confirm('Delete this review?')) return;
-      await api.del(`/reviews/${id}`);
+      toast.success('Listing status updated');
+      await load();
+
+    } catch (e) {
+      toast.error(e.message || 'Failed to update listing');
     }
-    load();
   }
 
+  // Review Actions
+  async function reviewAction(id, action) {
+    try {
+      if (action === 'approve') {
+        await api.patch(`/reviews/${id}/approve`, {});
+      }
+
+      if (action === 'reject') {
+        await api.patch(`/reviews/${id}/reject`, {});
+      }
+
+      if (action === 'delete') {
+        if (!confirm('Delete this review?')) return;
+
+        await api.del(`/reviews/${id}`);
+      }
+
+      toast.success('Review updated');
+      await load();
+
+    } catch (e) {
+      toast.error(e.message || 'Review action failed');
+    }
+  }
+
+  // Reset News Form
   function resetNewsForm() {
     setEditingNewsId(null);
-    setNewsForm({ title: '', content: '', imageFile: null, category_name: 'Industry News', seo_title: '', seo_description: '', tags: '' });
+
+    setNewsForm({
+      title: '',
+      content: '',
+      imageFile: null,
+      category_name: 'Industry News',
+      seo_title: '',
+      seo_description: '',
+      tags: ''
+    });
   }
 
+  // Create / Update News
   async function handleNewsSubmit(e) {
     e.preventDefault();
-    const toastId = toast.loading(editingNewsId ? 'Updating post...' : 'Publishing post...');
-    
+
+    const toastId = toast.loading(
+      editingNewsId ? 'Updating post...' : 'Publishing post...'
+    );
+
     try {
       const formData = new FormData();
+
       formData.append('title', newsForm.title);
       formData.append('content', newsForm.content);
       formData.append('category_name', newsForm.category_name);
       formData.append('seo_title', newsForm.seo_title);
       formData.append('seo_description', newsForm.seo_description);
       formData.append('tags', newsForm.tags);
-      if (newsForm.imageFile) formData.append('image', newsForm.imageFile);
+
+      if (newsForm.imageFile) {
+        formData.append('image', newsForm.imageFile);
+      }
 
       const token = localStorage.getItem('token');
-      const url = editingNewsId 
-        ? `${process.env.NEXT_PUBLIC_API_URL}/news/${editingNewsId}` 
+
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const url = editingNewsId
+        ? `${process.env.NEXT_PUBLIC_API_URL}/news/${editingNewsId}`
         : `${process.env.NEXT_PUBLIC_API_URL}/news`;
+
       const method = editingNewsId ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
         method,
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
         body: formData
       });
 
-      if (!res.ok) throw new Error('Failed to save post');
+      if (!res.ok) {
+        throw new Error('Failed to save news post');
+      }
 
-      toast.success(editingNewsId ? 'News updated!' : 'News post created!', { id: toastId });
+      toast.success(
+        editingNewsId ? 'News updated!' : 'News post created!',
+        { id: toastId }
+      );
+
       resetNewsForm();
-      load(); 
+
+      await load();
+
     } catch (err) {
-      toast.error(err.message, { id: toastId });
+      console.error('News save error:', err);
+
+      toast.error(
+        err.message || 'Failed to save post',
+        { id: toastId }
+      );
     }
   }
 
+  // Edit News
   async function editNews(id) {
     try {
       const res = await api.get(`/news/admin/${id}`);
+
       setNewsForm({
-        title: res.title,
-        content: res.content,
+        title: res.title || '',
+        content: res.content || '',
         imageFile: null,
-        category_name: res.category,
+        category_name: res.category || 'Industry News',
         seo_title: res.seo_title || '',
         seo_description: res.seo_description || '',
         tags: res.tags || ''
       });
+
       setEditingNewsId(id);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+
     } catch (e) {
-      toast.error(e.message);
+      toast.error(e.message || 'Failed to load news post');
     }
   }
 
+  // Delete News
   async function deleteNews(id) {
     if (!confirm('Delete this news post permanently?')) return;
+
     try {
       await api.del(`/news/${id}`);
-      toast.success('Deleted');
-      load();
+
+      toast.success('News deleted');
+
+      await load();
+
     } catch (e) {
-      toast.error(e.message);
+      toast.error(e.message || 'Failed to delete news');
     }
   }
 
+  // Create Directory Entry
   async function createDirectory(e) {
     e.preventDefault();
+
     const toastId = toast.loading('Adding to directory...');
+
     try {
       const formData = new FormData();
+
       formData.append('name', dirForm.name);
       formData.append('category', dirForm.category);
       formData.append('location', dirForm.location);
       formData.append('phone', dirForm.phone);
       formData.append('phone2', dirForm.phone2);
       formData.append('website', dirForm.website);
-      if (dirForm.logoFile) formData.append('logo', dirForm.logoFile);
+
+      if (dirForm.logoFile) {
+        formData.append('logo', dirForm.logoFile);
+      }
 
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/directory`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
+
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/directory`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: formData
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error('Failed to add directory entry');
+      }
+
+      toast.success('Directory entry added!', {
+        id: toastId
       });
 
-      if (!res.ok) throw new Error('Failed to add directory entry');
+      setDirForm({
+        name: '',
+        category: 'MRI Manufacturer',
+        website: '',
+        phone: '',
+        phone2: '',
+        location: '',
+        logoFile: null
+      });
 
-      toast.success('Directory entry added!', { id: toastId });
-      setDirForm({ name: '', category: 'MRI Manufacturer', website: '', phone: '', phone2: '', location: '', logoFile: null });
-      load();
+      await load();
+
     } catch (err) {
-      toast.error(err.message, { id: toastId });
+      toast.error(
+        err.message || 'Failed to add directory entry',
+        { id: toastId }
+      );
     }
   }
 
+  // Delete Directory Entry
   async function deleteDirectory(id) {
     if (!confirm('Delete this directory entry?')) return;
-    await api.del(`/directory/${id}`);
-    load();
+
+    try {
+      await api.del(`/directory/${id}`);
+
+      toast.success('Directory entry deleted');
+
+      await load();
+
+    } catch (e) {
+      toast.error(e.message || 'Failed to delete directory entry');
+    }
   }
 
-  if (!stats) return <div className="container" style={{ padding: 40 }}>Loading or unauthorized...</div>;
+  if (!stats) {
+    return (
+      <div className="container" style={{ padding: 40 }}>
+        Loading or unauthorized...
+      </div>
+    );
+  }
 
-  const pendingReviews = reviews.filter((r) => r.status === 'pending').length;
+  const pendingReviews = reviews.filter(
+    r => r.status === 'pending'
+  ).length;
 
   return (
     <div className="container" style={{ padding: '30px 20px' }}>
+
       <h1>Admin Dashboard</h1>
 
+      {/* Dashboard Statistics */}
       <div className="grid grid-4" style={{ marginTop: 20 }}>
-        <div className="card" style={{ padding: 20 }}><b>Users</b><div style={{ fontSize: 28 }}>{stats.users}</div></div>
-        <div className="card" style={{ padding: 20 }}><b>Listings</b><div style={{ fontSize: 28 }}>{stats.listings}</div></div>
-        <div className="card" style={{ padding: 20 }}><b>Pending listings</b><div style={{ fontSize: 28 }}>{stats.pending}</div></div>
+
+        <div className="card" style={{ padding: 20 }}>
+          <b>Users</b>
+          <div style={{ fontSize: 28 }}>{stats.users}</div>
+        </div>
+
+        <div className="card" style={{ padding: 20 }}>
+          <b>Listings</b>
+          <div style={{ fontSize: 28 }}>{stats.listings}</div>
+        </div>
+
+        <div className="card" style={{ padding: 20 }}>
+          <b>Pending listings</b>
+          <div style={{ fontSize: 28 }}>{stats.pending}</div>
+        </div>
+
         <div className="card" style={{ padding: 20 }}>
           <b>Pending reviews</b>
-          <div style={{ fontSize: 28, color: pendingReviews ? '#dc3545' : '#111827' }}>{pendingReviews}</div>
+          <div style={{
+            fontSize: 28,
+            color: pendingReviews ? '#dc3545' : '#111827'
+          }}>
+            {pendingReviews}
+          </div>
         </div>
+
       </div>
 
-      <div style={{ marginTop: 24, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <button className={`btn ${tab !== 'listings' ? 'btn-outline' : ''}`} onClick={() => setTab('listings')}>Listings</button>
-        <button className={`btn ${tab !== 'reviews' ? 'btn-outline' : ''}`} onClick={() => setTab('reviews')}>
-          Reviews {pendingReviews > 0 && <span style={{ background: '#dc3545', color: '#fff', borderRadius: 999, padding: '1px 7px', fontSize: 11, marginLeft: 4 }}>{pendingReviews}</span>}
+      {/* Dashboard Tabs */}
+      <div style={{
+        marginTop: 24,
+        display: 'flex',
+        gap: 10,
+        flexWrap: 'wrap'
+      }}>
+
+        <button
+          className={`btn ${tab !== 'listings' ? 'btn-outline' : ''}`}
+          onClick={() => setTab('listings')}
+        >
+          Listings
         </button>
-        <button className={`btn ${tab !== 'users' ? 'btn-outline' : ''}`} onClick={() => setTab('users')}>Users</button>
-        <button className={`btn ${tab !== 'news' ? 'btn-outline' : ''}`} onClick={() => setTab('news')}>News / Blog</button>
-        <button className={`btn ${tab !== 'directory' ? 'btn-outline' : ''}`} onClick={() => setTab('directory')}>Directory</button>
+
+        <button
+          className={`btn ${tab !== 'reviews' ? 'btn-outline' : ''}`}
+          onClick={() => setTab('reviews')}
+        >
+          Reviews
+
+          {pendingReviews > 0 && (
+            <span style={{
+              background: '#dc3545',
+              color: '#fff',
+              borderRadius: 999,
+              padding: '1px 7px',
+              fontSize: 11,
+              marginLeft: 4
+            }}>
+              {pendingReviews}
+            </span>
+          )}
+        </button>
+
+        <button
+          className={`btn ${tab !== 'users' ? 'btn-outline' : ''}`}
+          onClick={() => setTab('users')}
+        >
+          Users
+        </button>
+
+        <button
+          className={`btn ${tab !== 'news' ? 'btn-outline' : ''}`}
+          onClick={() => setTab('news')}
+        >
+          News / Blog
+        </button>
+
+        <button
+          className={`btn ${tab !== 'directory' ? 'btn-outline' : ''}`}
+          onClick={() => setTab('directory')}
+        >
+          Directory
+        </button>
+
       </div>
 
+      {/* LISTINGS TAB */}
       {tab === 'listings' && (
-        <div className="card" style={{ padding: 20, marginTop: 14, overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr style={{ textAlign: 'left' }}>
-              <th style={{ padding: 8 }}>Title</th><th style={{ padding: 8 }}>Seller</th><th style={{ padding: 8 }}>Status</th><th style={{ padding: 8 }}>Actions</th>
-            </tr></thead>
+        <div
+          className="card"
+          style={{
+            padding: 20,
+            marginTop: 14,
+            overflowX: 'auto'
+          }}
+        >
+
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse'
+          }}>
+
+            <thead>
+              <tr style={{ textAlign: 'left' }}>
+                <th style={{ padding: 8 }}>Title</th>
+                <th style={{ padding: 8 }}>Seller</th>
+                <th style={{ padding: 8 }}>Status</th>
+                <th style={{ padding: 8 }}>Actions</th>
+              </tr>
+            </thead>
+
             <tbody>
-              {listings.map((l) => (
-                <tr key={l.id} style={{ borderTop: '1px solid #eee' }}>
-                  <td style={{ padding: 8 }}><Link href={`/listings/${l.slug || l.id}`} style={{ color: '#0d6efd' }}>{l.title}</Link></td>
-                  <td style={{ padding: 8 }}>{l.seller_email}</td>
-                  <td style={{ padding: 8 }}><span className={`badge ${l.status}`}>{l.status}</span></td>
+              {listings.map(l => (
+                <tr
+                  key={l.id}
+                  style={{ borderTop: '1px solid #eee' }}
+                >
+
                   <td style={{ padding: 8 }}>
+                    <Link
+                      href={`/listings/${l.slug || l.id}`}
+                      style={{ color: '#0d6efd' }}
+                    >
+                      {l.title}
+                    </Link>
+                  </td>
+
+                  <td style={{ padding: 8 }}>
+                    {l.seller_email}
+                  </td>
+
+                  <td style={{ padding: 8 }}>
+                    <span className={`badge ${l.status}`}>
+                      {l.status}
+                    </span>
+                  </td>
+
+                  <td style={{ padding: 8 }}>
+
                     {l.status === 'pending' && (
                       <>
-                        <button className="btn" style={{ padding: '4px 10px', marginRight: 4 }} onClick={() => setListingStatus(l.id, 'active')}>Approve</button>
-                        <button className="btn btn-danger" style={{ padding: '4px 10px' }} onClick={() => setListingStatus(l.id, 'rejected')}>Reject</button>
+                        <button
+                          className="btn"
+                          style={{
+                            padding: '4px 10px',
+                            marginRight: 4
+                          }}
+                          onClick={() => setListingStatus(l.id, 'active')}
+                        >
+                          Approve
+                        </button>
+
+                        <button
+                          className="btn btn-danger"
+                          style={{ padding: '4px 10px' }}
+                          onClick={() => setListingStatus(l.id, 'rejected')}
+                        >
+                          Reject
+                        </button>
                       </>
                     )}
+
                     {l.status === 'active' && (
                       <>
-                        <Link className="btn btn-outline" href={`/dashboard/listings/${l.id}`} style={{ padding: '4px 10px', marginRight: 4 }}>Edit</Link>
-                        <button className="btn btn-outline" style={{ padding: '4px 10px', marginRight: 4 }} onClick={() => setListingStatus(l.id, 'sold')}>Mark Sold</button>
-                        <button className="btn btn-danger" style={{ padding: '4px 10px' }} onClick={() => setListingStatus(l.id, 'rejected')}>Reject</button>
+                        <Link
+                          className="btn btn-outline"
+                          href={`/dashboard/listings/${l.id}`}
+                          style={{
+                            padding: '4px 10px',
+                            marginRight: 4
+                          }}
+                        >
+                          Edit
+                        </Link>
+
+                        <button
+                          className="btn btn-outline"
+                          style={{
+                            padding: '4px 10px',
+                            marginRight: 4
+                          }}
+                          onClick={() => setListingStatus(l.id, 'sold')}
+                        >
+                          Mark Sold
+                        </button>
+
+                        <button
+                          className="btn btn-danger"
+                          style={{ padding: '4px 10px' }}
+                          onClick={() => setListingStatus(l.id, 'rejected')}
+                        >
+                          Reject
+                        </button>
                       </>
                     )}
+
                     {(l.status === 'sold' || l.status === 'rejected') && (
-                      <button className="btn btn-outline" style={{ padding: '4px 10px' }} onClick={() => setListingStatus(l.id, 'active')}>Re-activate</button>
+                      <button
+                        className="btn btn-outline"
+                        style={{ padding: '4px 10px' }}
+                        onClick={() => setListingStatus(l.id, 'active')}
+                      >
+                        Re-activate
+                      </button>
                     )}
+
                   </td>
                 </tr>
               ))}
             </tbody>
+
           </table>
         </div>
       )}
 
+      {/* REVIEWS TAB */}
       {tab === 'reviews' && (
         <div className="card" style={{ padding: 20, marginTop: 14 }}>
+
           {reviews.length === 0 && <p>No reviews yet.</p>}
-          {reviews.map((r) => (
-            <div key={r.id} style={{ borderTop: '1px solid #eee', padding: '14px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+
+          {reviews.map(r => (
+            <div
+              key={r.id}
+              style={{
+                borderTop: '1px solid #eee',
+                padding: '14px 0'
+              }}
+            >
+
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start'
+              }}>
+
                 <div>
-                  <div style={{ fontWeight: 700 }}>{r.reviewer_name} <span className={`badge ${r.status === 'approved' ? 'active' : r.status === 'rejected' ? 'rejected' : 'pending'}`}>{r.status}</span></div>
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>{r.comment}</div>
+
+                  <div style={{ fontWeight: 700 }}>
+                    {r.reviewer_name}
+
+                    {' '}
+
+                    <span className={`badge ${
+                      r.status === 'approved'
+                        ? 'active'
+                        : r.status === 'rejected'
+                          ? 'rejected'
+                          : 'pending'
+                    }`}>
+                      {r.status}
+                    </span>
+                  </div>
+
+                  <div style={{
+                    fontSize: 13,
+                    color: '#6b7280'
+                  }}>
+                    {r.comment}
+                  </div>
+
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {r.status !== 'approved' && <button className="btn" style={{ padding: '4px 10px' }} onClick={() => reviewAction(r.id, 'approve')}>Approve</button>}
-                  {r.status !== 'rejected' && <button className="btn btn-outline" style={{ padding: '4px 10px' }} onClick={() => reviewAction(r.id, 'reject')}>Reject</button>}
+
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4
+                }}>
+
+                  {r.status !== 'approved' && (
+                    <button
+                      className="btn"
+                      style={{ padding: '4px 10px' }}
+                      onClick={() => reviewAction(r.id, 'approve')}
+                    >
+                      Approve
+                    </button>
+                  )}
+
+                  {r.status !== 'rejected' && (
+                    <button
+                      className="btn btn-outline"
+                      style={{ padding: '4px 10px' }}
+                      onClick={() => reviewAction(r.id, 'reject')}
+                    >
+                      Reject
+                    </button>
+                  )}
+
                 </div>
+
               </div>
+
             </div>
           ))}
+
         </div>
       )}
 
+      {/* USERS TAB */}
       {tab === 'users' && (
-        <div className="card" style={{ padding: 20, marginTop: 14, overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr style={{ textAlign: 'left' }}>
-              <th style={{ padding: 8 }}>Name</th><th style={{ padding: 8 }}>Email</th><th style={{ padding: 8 }}>Role</th><th style={{ padding: 8 }}>Country</th>
-            </tr></thead>
+        <div
+          className="card"
+          style={{
+            padding: 20,
+            marginTop: 14,
+            overflowX: 'auto'
+          }}
+        >
+
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse'
+          }}>
+
+            <thead>
+              <tr style={{ textAlign: 'left' }}>
+                <th style={{ padding: 8 }}>Name</th>
+                <th style={{ padding: 8 }}>Email</th>
+                <th style={{ padding: 8 }}>Role</th>
+                <th style={{ padding: 8 }}>Country</th>
+              </tr>
+            </thead>
+
             <tbody>
-              {users.map((u) => (
-                <tr key={u.id} style={{ borderTop: '1px solid #eee' }}>
-                  <td style={{ padding: 8 }}>{u.name}</td><td style={{ padding: 8 }}>{u.email}</td><td style={{ padding: 8 }}>{u.role}</td><td style={{ padding: 8 }}>{u.country || '—'}</td>
+              {users.map(u => (
+                <tr
+                  key={u.id}
+                  style={{ borderTop: '1px solid #eee' }}
+                >
+                  <td style={{ padding: 8 }}>{u.name}</td>
+                  <td style={{ padding: 8 }}>{u.email}</td>
+                  <td style={{ padding: 8 }}>{u.role}</td>
+                  <td style={{ padding: 8 }}>{u.country || '—'}</td>
                 </tr>
               ))}
             </tbody>
+
           </table>
         </div>
       )}
 
+      {/* NEWS / BLOG TAB */}
       {tab === 'news' && (
         <>
-          <div className="card" style={{ padding: 24, marginTop: 14, marginBottom: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h3>{editingNewsId ? 'Edit Post' : 'Add New Post'}</h3>
+
+          <div
+            className="card"
+            style={{
+              padding: 24,
+              marginTop: 14,
+              marginBottom: 24
+            }}
+          >
+
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 20
+            }}>
+
+              <h3>
+                {editingNewsId ? 'Edit Post' : 'Add New Post'}
+              </h3>
+
               {editingNewsId && (
-                <button type="button" className="btn btn-outline" onClick={resetNewsForm}>+ Create New Post Instead</button>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={resetNewsForm}
+                >
+                  + Create New Post Instead
+                </button>
               )}
+
             </div>
-            
-            <form onSubmit={handleNewsSubmit} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 30 }}>
+
+            <form
+              onSubmit={handleNewsSubmit}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 1fr',
+                gap: 30
+              }}
+            >
+
               <div>
-                <div className="form-row" style={{ marginBottom: 20 }}>
-                  <input required value={newsForm.title} onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} placeholder="Enter post title here..." style={{ fontSize: 24, padding: 12, fontWeight: 600 }} />
+
+                <div
+                  className="form-row"
+                  style={{ marginBottom: 20 }}
+                >
+                  <input
+                    required
+                    value={newsForm.title}
+                    onChange={e => setNewsForm(prev => ({
+                      ...prev,
+                      title: e.target.value
+                    }))}
+                    placeholder="Enter post title here..."
+                    style={{
+                      fontSize: 24,
+                      padding: 12,
+                      fontWeight: 600
+                    }}
+                  />
                 </div>
+
                 <div className="form-row">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 8
+                  }}>
+
                     <label>Post Content</label>
-                    <button type="button" onClick={imageHandler} className="btn btn-outline" style={{ padding: '4px 12px', fontSize: 13 }}>
+
+                    <button
+                      type="button"
+                      onClick={imageHandler}
+                      className="btn btn-outline"
+                      style={{
+                        padding: '4px 12px',
+                        fontSize: 13
+                      }}
+                    >
                       + Insert Image
                     </button>
+
                   </div>
-                  <div style={{ background: '#fff', minHeight: 400, marginBottom: 50 }}>
-                    <ReactQuill 
+
+                  <div style={{
+                    background: '#fff',
+                    minHeight: 400,
+                    marginBottom: 50
+                  }}>
+
+                    <ReactQuill
                       ref={quillRef}
-                      theme="snow" 
-                      value={newsForm.content} 
-                      onChange={(content) => setNewsForm({ ...newsForm, content })} 
+                      theme="snow"
+                      value={newsForm.content}
+                      onChange={content => setNewsForm(prev => ({
+                        ...prev,
+                        content
+                      }))}
                       modules={quillModules}
-                      style={{ height: 350 }} 
+                      style={{ height: 350 }}
                     />
+
                   </div>
+
                 </div>
+
               </div>
+
+              {/* NEWS SIDEBAR */}
               <div>
-                <div className="card" style={{ padding: 20, marginBottom: 20, background: '#f8fafc' }}>
-                  <h4 style={{ marginBottom: 16 }}>Publish</h4>
-                  <button className="btn" type="submit" style={{ width: '100%' }}>{editingNewsId ? 'Update Post' : 'Publish Post'}</button>
+
+                <div
+                  className="card"
+                  style={{
+                    padding: 20,
+                    marginBottom: 20,
+                    background: '#f8fafc'
+                  }}
+                >
+
+                  <h4 style={{ marginBottom: 16 }}>
+                    Publish
+                  </h4>
+
+                  <button
+                    className="btn"
+                    type="submit"
+                    style={{ width: '100%' }}
+                  >
+                    {editingNewsId ? 'Update Post' : 'Publish Post'}
+                  </button>
+
                 </div>
-                <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-                  <h4 style={{ marginBottom: 16 }}>Category</h4>
-                  <input list="news-category-options" value={newsForm.category_name} onChange={(e) => setNewsForm({ ...newsForm, category_name: e.target.value })} placeholder="Select or type a new category" style={{ width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4 }} />
+
+                {/* CATEGORY */}
+                <div
+                  className="card"
+                  style={{ padding: 20, marginBottom: 20 }}
+                >
+
+                  <h4 style={{ marginBottom: 16 }}>
+                    Category
+                  </h4>
+
+                  <input
+                    list="news-category-options"
+                    value={newsForm.category_name}
+                    onChange={e => setNewsForm(prev => ({
+                      ...prev,
+                      category_name: e.target.value
+                    }))}
+                    placeholder="Select or type a new category"
+                    style={{
+                      width: '100%',
+                      padding: 10,
+                      border: '1px solid #ccc',
+                      borderRadius: 4
+                    }}
+                  />
+
                   <datalist id="news-category-options">
-                    <option value="Industry News" /><option value="MRI Parts" /><option value="CT Parts" />
-                    <option value="MRI Safety" /><option value="Repairs & Maintenance" /><option value="Equipment Leasing" />
-                    <option value="Accessories" /><option value="Upcoming Events" />
+                    <option value="Industry News" />
+                    <option value="MRI Parts" />
+                    <option value="CT Parts" />
+                    <option value="MRI Safety" />
+                    <option value="Repairs & Maintenance" />
+                    <option value="Equipment Leasing" />
+                    <option value="Accessories" />
+                    <option value="Upcoming Events" />
                   </datalist>
+
                 </div>
-                <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-                  <h4 style={{ marginBottom: 16 }}>SEO Settings</h4>
-                  <div className="form-row" style={{ marginBottom: 12 }}>
-                    <label style={{ fontSize: 13 }}>SEO Title</label>
-                    <input value={newsForm.seo_title} onChange={(e) => setNewsForm({ ...newsForm, seo_title: e.target.value })} placeholder="Meta title tag" style={{ padding: 8 }} />
+
+                {/* SEO SETTINGS */}
+                <div
+                  className="card"
+                  style={{ padding: 20, marginBottom: 20 }}
+                >
+
+                  <h4 style={{ marginBottom: 16 }}>
+                    SEO Settings
+                  </h4>
+
+                  <div
+                    className="form-row"
+                    style={{ marginBottom: 12 }}
+                  >
+
+                    <label style={{ fontSize: 13 }}>
+                      SEO Title
+                    </label>
+
+                    <input
+                      value={newsForm.seo_title}
+                      onChange={e => setNewsForm(prev => ({
+                        ...prev,
+                        seo_title: e.target.value
+                      }))}
+                      placeholder="Meta title tag"
+                      style={{ padding: 8 }}
+                    />
+
                   </div>
-                  <div className="form-row" style={{ marginBottom: 12 }}>
-                    <label style={{ fontSize: 13 }}>SEO Description</label>
-                    <textarea value={newsForm.seo_description} onChange={(e) => setNewsForm({ ...newsForm, seo_description: e.target.value })} placeholder="Meta description tag" rows={3} style={{ padding: 8, resize: 'vertical' }} />
+
+                  <div
+                    className="form-row"
+                    style={{ marginBottom: 12 }}
+                  >
+
+                    <label style={{ fontSize: 13 }}>
+                      SEO Description
+                    </label>
+
+                    <textarea
+                      value={newsForm.seo_description}
+                      onChange={e => setNewsForm(prev => ({
+                        ...prev,
+                        seo_description: e.target.value
+                      }))}
+                      placeholder="Meta description tag"
+                      rows={3}
+                      style={{
+                        padding: 8,
+                        resize: 'vertical'
+                      }}
+                    />
+
                   </div>
+
                   <div className="form-row">
-                    <label style={{ fontSize: 13 }}>Tags</label>
-                    <input value={newsForm.tags} onChange={(e) => setNewsForm({ ...newsForm, tags: e.target.value })} placeholder="e.g. MRI, safety, parts" style={{ padding: 8 }} />
+
+                    <label style={{ fontSize: 13 }}>
+                      Tags
+                    </label>
+
+                    <input
+                      value={newsForm.tags}
+                      onChange={e => setNewsForm(prev => ({
+                        ...prev,
+                        tags: e.target.value
+                      }))}
+                      placeholder="e.g. MRI, safety, parts"
+                      style={{ padding: 8 }}
+                    />
+
                   </div>
+
                 </div>
+
+                {/* FEATURED IMAGE */}
                 <div className="card" style={{ padding: 20 }}>
-                  <h4 style={{ marginBottom: 16 }}>Featured Image (Cover)</h4>
-                  <input type="file" accept="image/*" onChange={(e) => setNewsForm({ ...newsForm, imageFile: e.target.files[0] })} style={{ padding: '8px 0', width: '100%' }} />
-                  {editingNewsId && <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>Leave blank to keep existing cover image.</p>}
+
+                  <h4 style={{ marginBottom: 16 }}>
+                    Featured Image (Cover)
+                  </h4>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={e => setNewsForm(prev => ({
+                      ...prev,
+                      imageFile: e.target.files?.[0] || null
+                    }))}
+                    style={{
+                      padding: '8px 0',
+                      width: '100%'
+                    }}
+                  />
+
+                  {editingNewsId && (
+                    <p style={{
+                      fontSize: 12,
+                      color: '#6b7280',
+                      marginTop: 8
+                    }}>
+                      Leave blank to keep existing cover image.
+                    </p>
+                  )}
+
                 </div>
+
               </div>
+
             </form>
+
           </div>
 
+          {/* ALL PUBLISHED NEWS */}
           <div className="card" style={{ padding: 24 }}>
-            <h3 style={{ marginBottom: 16 }}>All Published News ({newsList.length})</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead><tr style={{ textAlign: 'left', borderBottom: '2px solid #eee' }}>
-                <th style={{ padding: 8 }}>Title</th>
-                <th style={{ padding: 8 }}>Category</th>
-                <th style={{ padding: 8 }}>Date</th>
-                <th style={{ padding: 8 }}>Actions</th>
-              </tr></thead>
-              <tbody>
-                {newsList.map((n) => (
-                  <tr key={n.id} style={{ borderTop: '1px solid #eee' }}>
-                    <td style={{ padding: 8, fontWeight: 600 }}>{n.title}</td>
-                    <td style={{ padding: 8 }}>{n.category}</td>
-                    <td style={{ padding: 8 }}>{new Date(n.created_at).toLocaleDateString()}</td>
-                    <td style={{ padding: 8 }}>
-                      <button className="btn btn-outline" style={{ padding: '4px 10px', marginRight: 4 }} onClick={() => editNews(n.id)}>Edit</button>
-                      <button className="btn btn-danger" style={{ padding: '4px 10px' }} onClick={() => deleteNews(n.id)}>Delete</button>
-                    </td>
+
+            <h3 style={{ marginBottom: 16 }}>
+              All Published News ({newsList.length})
+            </h3>
+
+            <div style={{ overflowX: 'auto' }}>
+
+              <table style={{
+                width: '100%',
+                borderCollapse: 'collapse'
+              }}>
+
+                <thead>
+                  <tr style={{
+                    textAlign: 'left',
+                    borderBottom: '2px solid #eee'
+                  }}>
+                    <th style={{ padding: 8 }}>Title</th>
+                    <th style={{ padding: 8 }}>Category</th>
+                    <th style={{ padding: 8 }}>Date</th>
+                    <th style={{ padding: 8 }}>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+
+                <tbody>
+
+                  {newsList.map(n => (
+                    <tr
+                      key={n.id}
+                      style={{ borderTop: '1px solid #eee' }}
+                    >
+
+                      <td style={{
+                        padding: 8,
+                        fontWeight: 600
+                      }}>
+                        {n.title}
+                      </td>
+
+                      <td style={{ padding: 8 }}>
+                        {n.category}
+                      </td>
+
+                      <td style={{ padding: 8 }}>
+                        {new Date(n.created_at).toLocaleDateString()}
+                      </td>
+
+                      <td style={{ padding: 8 }}>
+
+                        <button
+                          className="btn btn-outline"
+                          style={{
+                            padding: '4px 10px',
+                            marginRight: 4
+                          }}
+                          onClick={() => editNews(n.id)}
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          className="btn btn-danger"
+                          style={{ padding: '4px 10px' }}
+                          onClick={() => deleteNews(n.id)}
+                        >
+                          Delete
+                        </button>
+
+                      </td>
+
+                    </tr>
+                  ))}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
           </div>
+
         </>
       )}
 
+      {/* DIRECTORY TAB */}
       {tab === 'directory' && (
-        <div className="card" style={{ padding: 24, marginTop: 14 }}>
-          <h3 style={{ marginBottom: 20 }}>Add Company to Directory</h3>
-          
-          <form onSubmit={createDirectory} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 40 }}>
+        <div
+          className="card"
+          style={{
+            padding: 24,
+            marginTop: 14
+          }}
+        >
+
+          <h3 style={{ marginBottom: 20 }}>
+            Add Company to Directory
+          </h3>
+
+          <form
+            onSubmit={createDirectory}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 14,
+              marginBottom: 40
+            }}
+          >
+
             <div className="form-row">
+
               <label>Company Name *</label>
-              <input required value={dirForm.name} onChange={(e) => setDirForm({ ...dirForm, name: e.target.value })} />
+
+              <input
+                required
+                value={dirForm.name}
+                onChange={e => setDirForm(prev => ({
+                  ...prev,
+                  name: e.target.value
+                }))}
+              />
+
             </div>
+
             <div className="form-row">
+
               <label>Category *</label>
-              <input list="directory-category-options" value={dirForm.category} onChange={(e) => setDirForm({ ...dirForm, category: e.target.value })} placeholder="Select or type a new category" />
+
+              <input
+                list="directory-category-options"
+                value={dirForm.category}
+                onChange={e => setDirForm(prev => ({
+                  ...prev,
+                  category: e.target.value
+                }))}
+              />
+
               <datalist id="directory-category-options">
-                <option value="MRI Manufacturer" /><option value="MRI Repair Companies" />
-                <option value="CT Repair and sale Companies" /><option value="Hospitals" /><option value="Imaging Centres" />
+                <option value="MRI Manufacturer" />
+                <option value="MRI Repair Companies" />
+                <option value="CT Repair and sale Companies" />
+                <option value="Hospitals" />
+                <option value="Imaging Centres" />
               </datalist>
+
             </div>
+
             <div className="form-row">
+
               <label>Location</label>
-              <input value={dirForm.location} onChange={(e) => setDirForm({ ...dirForm, location: e.target.value })} placeholder="City, Country" />
+
+              <input
+                value={dirForm.location}
+                onChange={e => setDirForm(prev => ({
+                  ...prev,
+                  location: e.target.value
+                }))}
+                placeholder="City, Country"
+              />
+
             </div>
+
             <div className="form-row">
+
               <label>Primary Phone</label>
-              <input value={dirForm.phone} onChange={(e) => setDirForm({ ...dirForm, phone: e.target.value })} />
+
+              <input
+                value={dirForm.phone}
+                onChange={e => setDirForm(prev => ({
+                  ...prev,
+                  phone: e.target.value
+                }))}
+              />
+
             </div>
+
             <div className="form-row">
+
               <label>Secondary Phone (Optional)</label>
-              <input value={dirForm.phone2} onChange={(e) => setDirForm({ ...dirForm, phone2: e.target.value })} />
+
+              <input
+                value={dirForm.phone2}
+                onChange={e => setDirForm(prev => ({
+                  ...prev,
+                  phone2: e.target.value
+                }))}
+              />
+
             </div>
+
             <div className="form-row">
+
               <label>Website URL</label>
-              <input value={dirForm.website} onChange={(e) => setDirForm({ ...dirForm, website: e.target.value })} placeholder="https://..." />
+
+              <input
+                value={dirForm.website}
+                onChange={e => setDirForm(prev => ({
+                  ...prev,
+                  website: e.target.value
+                }))}
+                placeholder="https://..."
+              />
+
             </div>
-            <div className="form-row" style={{ gridColumn: '1 / -1' }}>
+
+            <div
+              className="form-row"
+              style={{ gridColumn: '1 / -1' }}
+            >
+
               <label>Company Logo (Optional)</label>
-              <input type="file" accept="image/*" onChange={(e) => setDirForm({ ...dirForm, logoFile: e.target.files[0] })} style={{ padding: '8px 0' }} />
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={e => setDirForm(prev => ({
+                  ...prev,
+                  logoFile: e.target.files?.[0] || null
+                }))}
+                style={{ padding: '8px 0' }}
+              />
+
             </div>
+
             <div style={{ gridColumn: '1 / -1' }}>
-              <button className="btn">Add to Directory</button>
+
+              <button className="btn" type="submit">
+                Add to Directory
+              </button>
+
             </div>
+
           </form>
 
-          <h3 style={{ marginBottom: 16 }}>Existing Directory Entries ({directory.length})</h3>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr style={{ textAlign: 'left', borderBottom: '2px solid #eee' }}>
-              <th style={{ padding: 8 }}>Logo</th><th style={{ padding: 8 }}>Name</th><th style={{ padding: 8 }}>Category</th><th style={{ padding: 8 }}>Location</th><th style={{ padding: 8 }}>Actions</th>
-            </tr></thead>
-            <tbody>
-              {directory.map((d) => (
-                <tr key={d.id} style={{ borderTop: '1px solid #eee' }}>
-                  <td style={{ padding: 8 }}>
-                    {d.logo_url ? <img src={d.logo_url} alt={d.name} style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 4 }} /> : '—'}
-                  </td>
-                  <td style={{ padding: 8, fontWeight: 600 }}>{d.name}</td>
-                  <td style={{ padding: 8 }}>{d.category}</td>
-                  <td style={{ padding: 8 }}>{d.location || '—'}</td>
-                  <td style={{ padding: 8 }}>
-                    <button className="btn btn-danger" style={{ padding: '4px 10px' }} onClick={() => deleteDirectory(d.id)}>Delete</button>
-                  </td>
+          {/* EXISTING DIRECTORY */}
+          <h3 style={{ marginBottom: 16 }}>
+            Existing Directory Entries ({directory.length})
+          </h3>
+
+          <div style={{ overflowX: 'auto' }}>
+
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse'
+            }}>
+
+              <thead>
+                <tr style={{
+                  textAlign: 'left',
+                  borderBottom: '2px solid #eee'
+                }}>
+                  <th style={{ padding: 8 }}>Logo</th>
+                  <th style={{ padding: 8 }}>Name</th>
+                  <th style={{ padding: 8 }}>Category</th>
+                  <th style={{ padding: 8 }}>Location</th>
+                  <th style={{ padding: 8 }}>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+
+                {directory.map(d => (
+                  <tr
+                    key={d.id}
+                    style={{ borderTop: '1px solid #eee' }}
+                  >
+
+                    <td style={{ padding: 8 }}>
+
+                      {d.logo_url ? (
+                        <img
+                          src={d.logo_url}
+                          alt={d.name}
+                          style={{
+                            width: 40,
+                            height: 40,
+                            objectFit: 'contain',
+                            borderRadius: 4
+                          }}
+                        />
+                      ) : '—'}
+
+                    </td>
+
+                    <td style={{
+                      padding: 8,
+                      fontWeight: 600
+                    }}>
+                      {d.name}
+                    </td>
+
+                    <td style={{ padding: 8 }}>
+                      {d.category}
+                    </td>
+
+                    <td style={{ padding: 8 }}>
+                      {d.location || '—'}
+                    </td>
+
+                    <td style={{ padding: 8 }}>
+
+                      <button
+                        className="btn btn-danger"
+                        style={{ padding: '4px 10px' }}
+                        onClick={() => deleteDirectory(d.id)}
+                      >
+                        Delete
+                      </button>
+
+                    </td>
+
+                  </tr>
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
         </div>
       )}
+
     </div>
   );
 }
