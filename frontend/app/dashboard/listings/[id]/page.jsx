@@ -7,10 +7,10 @@ import MultiImageUpload from '@/components/MultiImageUpload';
 import FeaturePromo from '@/components/FeaturePromo';
 import { parseGallery } from '@/lib/parseGallery';
 import toast from 'react-hot-toast';
-import 'react-quill/dist/quill.snow.css';
+import 'react-quill-new/dist/quill.snow.css';
 
 // Dynamically import ReactQuill to avoid SSR issues
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 export default function EditListing() {
   const { id } = useParams();
