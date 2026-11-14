@@ -18,6 +18,7 @@ const searchRoutes   = require('./routes/search');
 const newsRoutes = require('./routes/news');
 const directoryRoutes = require('./routes/directory');
 const app = express();
+const paypalRoutes = require('./routes/paypal');
 
 // ── CORS CONFIGURATION ──
 // Allow both your Vercel default URL and your custom domain
@@ -65,6 +66,7 @@ app.use('/api',           categoryRoutes);
 app.use('/api/admin',     adminRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/directory', directoryRoutes);
+app.use('/api/paypal', paypalRoutes);
 
 app.get('/', (_, res) => res.json({ ok: true, service: 'MRI Parts Hub API' }));
 
